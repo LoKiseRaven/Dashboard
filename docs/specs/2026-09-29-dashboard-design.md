@@ -1,6 +1,6 @@
 # Dashboard — spécification
 
-Version 1, du 2026-09-29. Statut : **à valider**.
+Version 1.1, du 2026-09-29. Changement depuis la v1 : le code d'accès passe du Generator au dashboard. Statut : **à valider**.
 Guide de style : `docs/design/style.md`, copie conforme de celui d'AI-Video-Editor. L'interface doit le respecter à la lettre.
 
 ---
@@ -27,7 +27,7 @@ Il est accessible depuis le PC et depuis le téléphone, sur le même Wi-Fi.
 
 - Démarrage automatique avec Windows (étape finale, §11).
 - Logique de la file d'attente GPU : seuls l'emplacement dans l'API et l'affichage sont prévus (§9).
-- Authentification : pas de mot de passe. Le dashboard est ouvert à tout appareil du réseau local (§10).
+- Protection des modules eux-mêmes : ils restent joignables sans code sur leur port (§10).
 
 ---
 
@@ -48,7 +48,7 @@ Conséquences :
 - **Conflit de ports** : les 3 apps visent le port 8000. Le dashboard impose un port à chacune (§5.1).
 - **Arguments différents** : la commande de lancement est configurée module par module (§5.1).
 - **Arbre de processus** : pour arrêter un module, il faut tuer `main.py` **et tous ses descendants**, sinon `uvicorn` reste en vie et garde le port.
-- **Code d'accès du Generator** : l'iframe ouverte depuis le téléphone affichera la page de code du Generator la première fois (cookie valable 30 jours). C'est acceptable. En revanche, la route d'état interrogée par le dashboard doit en être exemptée pour les appels locaux (§6.3).
+- **Code d'accès** : on **retire** celui du Generator (§6.3). Un code unique protège désormais le dashboard (§10).
 
 ---
 
@@ -75,6 +75,7 @@ Plateforme cible : **Windows**. Le code doit aussi tourner sous Linux pour les t
 Dashboard/
 ├── main.py                    # point d'entrée (bibliothèque standard uniquement)
 ├── modules.toml               # configuration des modules (versionnée)
+├── config.local.toml          # (ignoré par git) code d'accès du dashboard
 ├── backend/
 │   ├── requirements.txt       # fastapi, uvicorn, psutil, httpx
 │   ├── requirements-dev.txt   # pytest, …
@@ -83,10 +84,11 @@ Dashboard/
 │   │   ├── config.py          # lecture de modules.toml
 │   │   ├── processus.py       # lancer / arrêter / adopter un module
 │   │   ├── etat.py            # machine à états + interrogation des modules
-│   │   └── journal.py         # lecture de la fin des journaux
+│   │   ├── journal.py         # lecture de la fin des journaux
+│   │   └── acces.py           # code d'accès, cookie, limitation des essais
 │   └── tests/
 ├── frontend/                  # React + Vite + Tailwind
-├── etat/                      # (ignoré par git) <id>.json : PID, date de création, port
+├── etat/                      # (ignoré par git) <id>.json : PID, date de création, port ; secret.bin
 ├── journaux/                  # (ignoré par git) <id>.log et <id>.log.1
 └── docs/
     ├── design/style.md
@@ -230,12 +232,12 @@ Chaque modification fera l'objet d'une PR séparée dans le dépôt de l'app, ap
 
 | App | Travail |
 |---|---|
-| AI-Video-Generator | Route `/api/dashboard/etat` branchée sur `GestionnaireTaches`. La route est **exemptée du code d'accès pour les appels venant de 127.0.0.1** |
+| AI-Video-Generator | Route `/api/dashboard/etat` branchée sur `GestionnaireTaches`. **Suppression du code d'accès** : `web/auth.py`, la page de saisie du code, la vérification du cookie, `WEB_ACCESS_CODE` (config, `.env.example`, README) et la ligne correspondante de `main.py doctor`. L'option `--local` reste, mais ne sert plus qu'à écouter sur 127.0.0.1 |
 | AI-YouTube-to-TikTok | Route branchée sur `yt2short/web/jobs.py` |
 | AI-Video-Editor | Route branchée sur la table `taches` |
 | Les 3 | Vérifier que rien n'empêche l'affichage en iframe : pas d'en-tête `X-Frame-Options` ni `frame-ancestors`. Aucun trouvé à ce jour |
 
-Les modules sont sur le même hôte que le dashboard, seul le port change : ils sont « same-site » pour le navigateur. Le cookie `SameSite=Lax` du Generator fonctionne donc dans l'iframe.
+Les cookies ne tiennent pas compte du port : le dashboard et les modules partagent donc les mêmes cookies dans le navigateur. Le cookie du dashboard porte un nom qui lui est propre (`dashboard_acces`) pour ne jamais entrer en collision avec celui d'un module.
 
 ---
 
@@ -243,9 +245,20 @@ Les modules sont sur le même hôte que le dashboard, seul le port change : ils 
 
 Toutes les classes viennent de `style.md`. Seuls les éléments propres au dashboard sont décrits ici.
 
+### 7.0 Page de connexion `/connexion`
+
+Recette de `style.md` §5.21, telle quelle :
+- page entière avec le halo intense, carte `max-w-sm` translucide ;
+- médaillon emoji du dashboard, `h1` avec le second mot en dégradé, accroche « Entre ton code pour piloter tes modules. » ;
+- champ `type="password"` avec l'icône `Lock`, `autocomplete="current-password"`, focus automatique ;
+- bouton principal `large` « Entrer → » ; erreur sous le champ en `text-red-200` (« Code incorrect. ») ;
+- mention `text-xs text-doux` : « Code mémorisé 30 jours sur cet appareil. »
+
+Toute réponse 401 de l'API renvoie vers `/connexion`, puis vers la page demandée une fois le code saisi.
+
 ### 7.1 Page d'accueil `/`
 
-- Halo global (§4.6) et en-tête collant (§5.15) avec le logo : médaillon emoji + nom, le second mot en `texte-degrade` (voir la question ouverte n° 1).
+- Halo global (§4.6) et en-tête collant (§5.15) avec le logo : médaillon emoji + nom, le second mot en `texte-degrade` (voir la question ouverte n° 1). À droite, un bouton icône `fantome` `LogOut` (`aria-label="Se déconnecter"`), masqué quand on est sur le PC lui-même (pas de code, §10).
 - Conteneur `mx-auto max-w-6xl px-4 pt-6 pb-40`.
 - En-tête de page : `h1` « Modules », avec en sous-titre un résumé (`text-sm text-doux`, ex. « 1 allumé · 1 au travail »).
 - Grille `grid gap-4 md:grid-cols-2 lg:grid-cols-3`, avec cartes en cascade (`animate-apparition`, décalage de 60 ms).
@@ -345,7 +358,12 @@ Tutoiement, verbes d'action (« Allumer », « Éteindre », « Arrêter quand m
 | POST | `/api/modules/{id}/demarrer` | 202 ; 409 si ce n'est pas possible (avec `detail`) |
 | POST | `/api/modules/{id}/arreter` | corps `{force}` ; 202 ; **409 `{detail, taches}` si occupé et `force=false`** |
 | GET | `/api/modules/{id}/journal?lignes=200` | `{lignes: [...]}` |
-| GET | `/api/sante` | `{ok: true}` |
+| GET | `/api/sante` | `{ok: true}` (sans code) |
+| GET | `/api/session` | `{connecte, local}` (sans code) |
+| POST | `/api/connexion` | corps `{code}` ; 204 + cookie ; 401 si faux (sans code) |
+| POST | `/api/deconnexion` | 204, supprime le cookie |
+
+Toutes les autres routes `/api/*` renvoient **401** sans cookie valide. Les fichiers de l'interface (`frontend/dist`) restent servis sans code : c'est l'interface qui redirige vers `/connexion`.
 
 Les requêtes de démarrage ou d'arrêt envoyées en double pour un même module sont sérialisées par un verrou par module.
 
@@ -363,7 +381,20 @@ Piste pour plus tard : le dashboard devient l'**arbitre du GPU**. Avant une tâc
 
 ## 10. Sécurité
 
-- Le dashboard écoute sur `0.0.0.0:8080`, **sans authentification**. Tout appareil du Wi-Fi peut allumer ou éteindre les modules : c'est un choix assumé pour un réseau domestique.
+### 10.1 Code d'accès du dashboard
+
+Même mécanisme que celui qu'on retire du Generator, déplacé ici :
+- **Où est le code** : la variable d'environnement `DASHBOARD_ACCESS_CODE` si elle existe, sinon la clé `code_acces` de `config.local.toml` (ignoré par git).
+- **Premier lancement** : si aucun code n'est défini et que `main.py` tourne dans une console, il demande le code (saisie masquée, deux fois) et l'enregistre dans `config.local.toml`. Sans console (démarrage automatique, plus tard), le dashboard n'écoute que sur 127.0.0.1 et écrit un avertissement.
+- **Cookie** `dashboard_acces` : HMAC-SHA256 du code avec un secret aléatoire de 32 octets (`etat/secret.bin`, créé au premier lancement). Il ne contient donc jamais le code. Il dure 30 jours, avec `HttpOnly` et `SameSite=Lax`. Changer le code invalide tous les cookies existants.
+- **Sur le PC lui-même, pas de code** : les requêtes venant de 127.0.0.1 ou ::1 passent sans cookie. Cela servira aussi aux apps quand elles appelleront l'API de la file GPU (§9).
+- **Anti-force brute** : après 5 échecs depuis une même adresse, chaque essai suivant attend 2 s. Le compteur est remis à zéro après une réussite.
+- La comparaison du code se fait en temps constant (`hmac.compare_digest`).
+
+### 10.2 Le reste
+
+- Le dashboard écoute sur `0.0.0.0:8080`.
+- **Les modules ne sont pas protégés** : n'importe quel appareil du Wi-Fi peut ouvrir `http://<ip>:810x` directement, sans passer par le dashboard. C'est un choix assumé pour un réseau domestique. Si besoin plus tard, le dashboard pourra servir de portier : les modules n'écouteraient plus que sur 127.0.0.1 et le dashboard relaierait le trafic après vérification du code.
 - Le serveur ne lance **que** les commandes de `modules.toml`. Aucune route n'accepte de commande, de chemin ou d'argument libre.
 - L'identifiant `{id}` d'un module est validé contre la configuration.
 
@@ -384,7 +415,8 @@ Prévu : une tâche du Planificateur de tâches Windows, déclenchée à l'ouver
   - adoption après le redémarrage du dashboard ;
   - mort inattendue → ERROR ;
   - app sans route d'état → ON « état détaillé indisponible » ;
-  - config invalide.
+  - config invalide ;
+  - code d'accès : 401 sans cookie, bon et mauvais code, cookie invalidé après changement du code, exemption de 127.0.0.1, pause après 5 échecs.
 - **Interface** : vérification manuelle à 375 px et sur PC, avec la liste de contrôle de `style.md` §10.
 - **Validation finale sous Windows** : allumer et éteindre les 3 vrais modules, fermer le dashboard pendant une tâche, le rouvrir et vérifier l'adoption.
 
@@ -393,9 +425,9 @@ Prévu : une tâche du Planificateur de tâches Windows, déclenchée à l'ouver
 ## 13. Découpage des livraisons
 
 1. Squelette : `main.py`, serveur, `modules.toml`, lancement, arrêt et adoption des processus, tests.
-2. Interface : accueil, cartes, bouton d'alimentation, journal, pop-up.
+2. Interface : connexion, accueil, cartes, bouton d'alimentation, journal, pop-up.
 3. Vue module : iframe + barre de retour.
-4. Route `/api/dashboard/etat` dans chacune des 3 apps : une PR par dépôt.
+4. Route `/api/dashboard/etat` dans chacune des 3 apps, et suppression du code d'accès du Generator : une PR par dépôt.
 5. *(plus tard)* File GPU.
 6. *(plus tard)* Démarrage avec Windows.
 
@@ -407,4 +439,3 @@ Prévu : une tâche du Planificateur de tâches Windows, déclenchée à l'ouver
 2. **Ports.** Dashboard sur 8080, modules sur 8101, 8102 et 8103 : ça te va ?
 3. **Noms des dossiers sur le disque.** Sont-ils exactement `AI-Video-Generator`, `AI-YouTube-to-TikTok` et `AI-Video-Editor`, à côté de `Dashboard` ?
 4. **Emojis et descriptions des cartes.** 🍓, ✂️, 🎬 : à ajuster.
-5. **Code d'accès du Generator** : l'iframe te le demandera une fois par appareil. Si tu préfères, on peut le désactiver quand l'app est lancée par le dashboard.
