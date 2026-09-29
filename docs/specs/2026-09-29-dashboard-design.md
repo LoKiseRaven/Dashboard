@@ -286,8 +286,8 @@ Toute réponse 401 de l'API renvoie vers `/connexion`, puis vers la page demand�
 ```
 
 - Conteneur : `rounded-3xl border border-bord bg-surface p-5 sm:p-6`.
-- **Cliquable** (ON / WORKING / WAITING) : c'est un lien vers `/module/<id>`, avec `transition duration-300 hover:-translate-y-1 hover:border-rose/40 hover:shadow-2xl hover:shadow-rose/10`.
-- **Non cliquable** (OFF / STARTING / STOPPING / ERROR) : `aria-disabled="true"`, pas d'effet au survol, curseur par défaut. Un clic ne fait **rien**.
+- **Cliquable** (ON / WORKING / WAITING) : un lien étiré sur toute la carte (`absolute inset-0`) mène à `/module/<id>` ; le bouton d'alimentation et le journal passent au-dessus (`z-10`), car un bouton ne peut pas être placé dans un lien. Classes de survol : avec `transition duration-300 hover:-translate-y-1 hover:border-rose/40 hover:shadow-2xl hover:shadow-rose/10`.
+- **Non cliquable** (OFF / STARTING / STOPPING / ERROR) : pas de lien, pas d'effet au survol, curseur par défaut. Un clic ne fait **rien**. Pas d'`aria-disabled` sur la carte : il s'étendrait à son contenu et le bouton d'alimentation serait annoncé comme désactivé.
 - Bordure selon l'état : `border-ok/25` si ON, `border-cyan/30` si WORKING, `border-attente/30` si WAITING, `border-ko/30` si ERROR, sinon `border-bord`. Une carte OFF est légèrement éteinte (médaillon et titre en `opacity-60`).
 - Badge d'état (§5.7) :
 
