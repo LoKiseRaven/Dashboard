@@ -1,8 +1,10 @@
 # Dashboard — spécification
 
-Version 1.2, du 2026-09-29.
+Version 1.3, du 2026-09-29. Statut : **validée**.
 - v1.1 : le code d'accès passe du Generator au dashboard.
-- v1.2 : le dashboard s'appelle « Dashboard » 🤓 ; les cartes reprennent le nom et l'emoji de chaque app, sans description. Statut : **à valider**.
+- v1.2 : le dashboard s'appelle « Dashboard » 🤓 ; les cartes reprennent le nom et l'emoji de chaque app, sans description.
+- v1.3 : ports 8080 (dashboard) et 8081 à 8083 (modules).
+
 Guide de style : `docs/design/style.md`, copie conforme de celui d'AI-Video-Editor. L'interface doit le respecter à la lettre.
 
 ---
@@ -115,7 +117,7 @@ nom = "Verger Drama"
 emoji = "🍓"
 dossier = "../AI-Video-Generator"
 commande = ["main.py", "web", "--port", "{port}"]
-port = 8101
+port = 8081
 gpu = true
 
 [[modules]]
@@ -124,7 +126,7 @@ nom = "Short Studio"
 emoji = "✂️"
 dossier = "../AI-YouTube-to-TikTok"
 commande = ["main.py", "web", "--host", "0.0.0.0", "--port", "{port}", "--no-browser"]
-port = 8102
+port = 8082
 gpu = true
 
 [[modules]]
@@ -133,7 +135,7 @@ nom = "Montage IA"
 emoji = "🎬"
 dossier = "../AI-Video-Editor"
 commande = ["main.py", "--port", "{port}"]
-port = 8103
+port = 8083
 gpu = true
 ```
 
@@ -170,7 +172,7 @@ gpu = true
 
 Les modules continuent de tourner quand le dashboard s'arrête. Au démarrage, pour chaque module :
 - si `etat/<id>.json` existe, et que le PID existe avec la même `create_time`, le processus est **adopté** ;
-- sinon, si quelque chose écoute sur le port du module, on cherche son PID avec `psutil.net_connections()` et on l'adopte. Cela couvre un module lancé à la main avec `--port 810x` ;
+- sinon, si quelque chose écoute sur le port du module, on cherche son PID avec `psutil.net_connections()` et on l'adopte. Cela couvre un module lancé à la main avec `--port 808x` ;
 - sinon, le module est OFF et le fichier d'état périmé est supprimé.
 
 Le dashboard **n'allume jamais un module de lui-même** : ils sont OFF par défaut.
@@ -313,7 +315,7 @@ Toute réponse 401 de l'API renvoie vers `/connexion`, puis vers la page demand�
   - **ON / WORKING / WAITING** : `bg-rose text-white shadow-lg shadow-rose/30 hover:bg-rose-fonce`, `aria-label="Éteindre <nom>"`. C'est le seul aplat rose de la carte, ce qui respecte la règle « un seul principal par zone » ;
   - **STARTING / STOPPING** : désactivé, icône remplacée par `Loader2 animate-spin`.
 - `aria-pressed` vaut `true` quand le module est allumé.
-- En cas d'échec de la requête : notification d'erreur (§5.18), ex. « Impossible d'allumer Verger Drama : le port 8101 est déjà utilisé. »
+- En cas d'échec de la requête : notification d'erreur (§5.18), ex. « Impossible d'allumer Verger Drama : le port 8081 est déjà utilisé. »
 
 ### 7.4 Pop-up de confirmation d'arrêt
 
@@ -394,7 +396,7 @@ Même mécanisme que celui qu'on retire du Generator, déplacé ici :
 ### 10.2 Le reste
 
 - Le dashboard écoute sur `0.0.0.0:8080`.
-- **Les modules ne sont pas protégés** : n'importe quel appareil du Wi-Fi peut ouvrir `http://<ip>:810x` directement, sans passer par le dashboard. C'est un choix assumé pour un réseau domestique. Si besoin plus tard, le dashboard pourra servir de portier : les modules n'écouteraient plus que sur 127.0.0.1 et le dashboard relaierait le trafic après vérification du code.
+- **Les modules ne sont pas protégés** : n'importe quel appareil du Wi-Fi peut ouvrir `http://<ip>:8081 à 8083` directement, sans passer par le dashboard. C'est un choix assumé pour un réseau domestique. Si besoin plus tard, le dashboard pourra servir de portier : les modules n'écouteraient plus que sur 127.0.0.1 et le dashboard relaierait le trafic après vérification du code.
 - Le serveur ne lance **que** les commandes de `modules.toml`. Aucune route n'accepte de commande, de chemin ou d'argument libre.
 - L'identifiant `{id}` d'un module est validé contre la configuration.
 
@@ -433,7 +435,10 @@ Prévu : une tâche du Planificateur de tâches Windows, déclenchée à l'ouver
 
 ---
 
-## 14. Questions ouvertes
+## 14. Décisions validées
 
-1. **Ports.** Dashboard sur 8080, modules sur 8101, 8102 et 8103 : ça te va ?
-2. **Noms des dossiers sur le disque.** Sont-ils exactement `AI-Video-Generator`, `AI-YouTube-to-TikTok` et `AI-Video-Editor`, à côté de `Dashboard` ?
+- Nom : « Dashboard » 🤓.
+- Cartes : nom et emoji de chaque app, sans description.
+- Ports : dashboard 8080 ; Verger Drama 8081, Short Studio 8082, Montage IA 8083.
+- Dossiers : `../AI-Video-Generator`, `../AI-YouTube-to-TikTok`, `../AI-Video-Editor`.
+- Code d'accès : sur le dashboard, retiré du Generator ; modules non protégés.
