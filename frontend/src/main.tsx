@@ -63,9 +63,10 @@ createRoot(document.getElementById("racine")!).render(
         <Routes>
           <Route path="connexion" element={<Connexion />} />
           <Route element={<Protege />}>
+            {/* Vue module : pleine hauteur, sans l'en-tête du dashboard (spec §7.5). */}
+            <Route path="module/:id" element={<VueModule />} />
             <Route element={<Cadre />}>
               <Route index element={<Accueil />} />
-              <Route path="module/:id" element={<VueModule />} />
               <Route path="*" element={<Introuvable />} />
             </Route>
           </Route>

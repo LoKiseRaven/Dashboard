@@ -339,10 +339,11 @@ Elle s'affiche quand l'arrêt renvoie 409, c'est-à-dire quand le module est WOR
   - médaillon emoji `size-7 rounded-lg` + nom `font-titre font-bold truncate` ;
   - badge d'état ;
   - si WORKING, un mini-libellé de la tâche + %, masqué sur téléphone ;
-  - à droite : bouton icône `ExternalLink` (`aria-label="Ouvrir dans un nouvel onglet"`) et le bouton d'alimentation en petit (`size-9`), avec la même pop-up.
+  - à droite : bouton icône `ExternalLink` (`aria-label="Ouvrir dans un nouvel onglet"`) et le bouton d'alimentation en petit (`size-10`, le minimum du guide §7 pour un bouton icône), avec la même pop-up. Sur téléphone, le lien retour n'affiche que la flèche (`aria-label="Retour au dashboard"`) et le mini-libellé de tâche est masqué sous `md`.
 - En dessous : `<iframe class="min-h-0 flex-1 w-full border-0 bg-fond">`, avec `src = ${location.protocol}//${location.hostname}:${port}/`. L'URL fonctionne donc depuis le téléphone comme depuis le PC.
-- Si le module est OFF ou ERROR à l'ouverture de l'URL : redirection vers `/`.
-- Si le module s'arrête pendant qu'on le regarde : voile par-dessus l'iframe, « Verger Drama est éteint », avec un bouton principal « Retour au dashboard ».
+- Si le module n'est pas allumé (ni ON, ni WORKING, ni WAITING) à l'ouverture de l'URL, ou s'il est inconnu : redirection vers `/`.
+- Si le module s'arrête pendant qu'on le regarde : voile par-dessus l'iframe, « Verger Drama est éteint » (ou « Arrêt de… », « …s'est arrêté » en ERROR), avec un bouton principal « Retour au dashboard ». On peut le rallumer depuis la barre : le voile disparaît et l'iframe est rechargée.
+- L'iframe reçoit `title` (nom du module) et `allow="clipboard-read; clipboard-write; fullscreen; autoplay"` (boutons « Copier » des apps). L'onglet prend le titre « <nom> · Dashboard ».
 - La barre du haut suit l'état du module toutes les 1,5 s.
 
 ### 7.6 Ton

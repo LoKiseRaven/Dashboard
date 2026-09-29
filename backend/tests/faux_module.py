@@ -2,6 +2,7 @@
 
 Options :
   --port N     port d'écoute
+  --host H     adresse d'écoute (défaut : 127.0.0.1)
   --enfant     comme AI-Video-Editor : relance un sous-processus qui, lui, écoute sur le port
   --retard S   attend S secondes avant d'écouter (simule un premier lancement)
   --mourir     s'arrête tout seul avec le code 3 après 0,5 s
@@ -49,7 +50,8 @@ def main(argv):
     if "--enfant" in argv:
         reste = [a for a in argv if a != "--enfant"]
         sys.exit(subprocess.call([sys.executable, __file__, *reste]))
-    ThreadingHTTPServer(("127.0.0.1", port), Gestionnaire).serve_forever()
+    hote = argv[argv.index("--host") + 1] if "--host" in argv else "127.0.0.1"
+    ThreadingHTTPServer((hote, port), Gestionnaire).serve_forever()
 
 
 if __name__ == "__main__":

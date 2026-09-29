@@ -38,7 +38,8 @@ cd backend
 | `fc021a4` | Spec v1.3 validée : ports 8080 (dashboard), 8081 à 8083 (modules) |
 | `d69cf29` | Étape 1 : serveur (processus, états, code d'accès) + 24 tests |
 | `aae0eb8` | `HANDOVER.md`, `CLAUDE.md`, commandes de test Windows dans `README.md`, note `.venv` dans la spec §5.1 |
-| (ce commit) | Étape 2 : interface `frontend/` (connexion, accueil, cartes, bouton ⏻, journal, pop-up d'arrêt). Spec §7.2 : suppression d'`aria-disabled` sur la carte, lien étiré |
+| `2628a52` | Étape 2 : interface `frontend/` (connexion, accueil, cartes, bouton ⏻, journal, pop-up d'arrêt). Spec §7.2 : suppression d'`aria-disabled` sur la carte, lien étiré |
+| (ce commit) | Étape 3 : vue module `/module/:id` (barre + iframe, voile quand le module s'éteint). ⏻ « petit » en `size-10`. Option `--host` du faux module. Spec §7.5 précisée |
 
 ### 1.2 Fichiers
 
@@ -64,27 +65,27 @@ cd backend
 
 | Fichier | Rôle |
 |---|---|
-| `main.tsx` | Routes : `/connexion` (hors cadre), puis `Protege` (renvoie vers `/connexion?suite=…` si `session.connecte` est faux) → `Cadre` (halo + en-tête) → `/` et `/module/:id`. `<Toasts />` est hors des routes |
+| `main.tsx` | Routes : `/connexion` (hors cadre), puis `Protege` (renvoie vers `/connexion?suite=…` si `session.connecte` est faux) → `/module/:id` (pleine page) et `Cadre` (halo + en-tête) → `/` et `*`. `<Toasts />` est hors des routes |
 | `api.ts` | `requete()` : sur une réponse 401 (sauf `/api/connexion`), émet l'événement `dashboard:deconnecte`, qui fait repasser la session à non connectée. `tachesDuRefus(e)` extrait les tâches d'un 409. `adresseModule(m)` = `${protocol}//${hostname}:${port}/`. `decouperNom()` isole le dernier mot du nom |
 | `types.ts` | `Module`, `Tache`, `Session`, listes `ALLUMES`, `OCCUPES`, `EN_TRANSITION` |
 | `hooks/contexte.tsx` | Contextes `useToasts` (3 au plus, 2 s / 6 s) et `useSession` (`GET /api/session` au démarrage) |
 | `hooks/sondage.ts` | `useSondage(charger, intervalle, actif)` : appel immédiat puis périodique, **en pause quand l'onglet est caché**, jamais deux requêtes en parallèle, `recharger()` pour forcer |
 | `composants/ui.tsx` | `Bouton`/`classesBouton` (guide §5.1, accepte `ref`), `BadgeEtat` (libellés et couleurs de la spec §7.2), `NomDegrade`, `Progression` (`pct` null → barre pleine qui pulse), `Encart`, `Halo` |
 | `composants/cadre.tsx` | `EnTete` (🤓 « Dash**board** », bouton `LogOut` masqué si `session.local`), `Toasts` |
-| `composants/Alimentation.tsx` | `BoutonAlimentation` (bouton rond, icône `Power`, rose si allumé) : `demarrer` ou `arreter` ; sur un 409 avec `taches`, ouvre `PopupArret` (**portail** vers `document.body`, `role="alertdialog"`, focus initial sur « Annuler », Échap et clic sur le voile ferment, Tab piégé) qui renvoie `arreter(id, true)`. Prévu pour être réutilisé en `petit` (size-9) dans la barre de l'étape 3 |
+| `composants/Alimentation.tsx` | `BoutonAlimentation` (bouton rond `size-11`, ou `size-10` en `petit` ; icône `Power`, rose si allumé) : `demarrer` ou `arreter` ; sur un 409 avec `taches`, ouvre `PopupArret` (**portail** vers `document.body`, `role="alertdialog"`, focus initial sur « Annuler », Échap et clic sur le voile ferment, Tab piégé) qui renvoie `arreter(id, true)`. Réutilisé en `petit` dans la barre de la vue module |
 | `composants/CarteModule.tsx` | Carte (spec §7.2). Si allumée : un `<Link>` étiré (`absolute inset-0 z-0`) ; le bouton et le journal sont en `relative z-10` |
 | `composants/Journal.tsx` | Journal dépliable, 200 lignes, sondage de 2 s seulement s'il est déplié ; le choix est retenu dans `localStorage` (`journal-ouvert:<id>`), sinon il est déplié par défaut en STARTING et ERROR ; défilement automatique sauf si l'on est remonté. Masqué quand le module est OFF |
 | `composants/taches.tsx` | `LigneTache`, `resumeTache`, `texteFile` (« En attente du GPU · 2e dans la file ») |
 | `pages/Connexion.tsx` | Guide §5.21. `suite` n'accepte qu'un chemin interne (`/…`, pas `//…`) |
 | `pages/Accueil.tsx` | `h1` « Modules », résumé (« 1 allumé · 1 au travail · 1 en erreur »), grille `md:grid-cols-2 lg:grid-cols-3`, 3 squelettes au chargement, encart d'erreur avec « Réessayer » |
-| `pages/VueModule.tsx` | **Provisoire** : médaillon + « Ouvrir <nom> » (lien direct vers le port) + retour. À remplacer à l'étape 3. Redirige vers `/` si le module n'est pas allumé |
+| `pages/VueModule.tsx` | Vue module (spec §7.5), route **hors de `Cadre`** mais sous `Protege`. Barre `h-12` : lien retour (flèche seule sous `sm`), médaillon, nom (tronqué), `BadgeEtat`, mini-libellé de tâche (masqué sous `md`), lien `ExternalLink` (`target="_blank"`) et `BoutonAlimentation petit`. En dessous, `<iframe key={session} src={adresseModule(m)}>`. Sondage de `GET /api/modules/<id>` toutes les 1,5 s ; un 404 est transformé en `"inconnu"` → redirection. `ouvert` (état au premier chargement) : si le module n'était pas allumé, redirection vers `/`. Ensuite, s'il s'éteint : voile (« Arrêt de… », « … est éteint », « … s'est arrêté ») ; s'il est rallumé depuis la barre, `session` est incrémenté, ce qui recharge l'iframe. Titre de l'onglet : « <nom> · Dashboard » |
 
 `vite.config.ts` relaie `/api` vers `http://localhost:8080` en mode `npm run dev`.
 
 **Configuration** : `modules.toml` (versionné). Les fichiers locaux ignorés par git sont `config.local.toml`, `etat/`, `journaux/`, `backend/.venv/`, `frontend/node_modules/` et `frontend/dist/`.
 
 **Tests** (`backend/tests/`) :
-- `faux_module.py` est copié en `main.py` dans un dossier temporaire. Ses options sont `--port`, `--enfant`, `--retard S` et `--mourir` (qui sort avec le code 3). Il lit `taches.json` et `sans_etat` dans son dossier courant ;
+- `faux_module.py` est copié en `main.py` dans un dossier temporaire. Ses options sont `--port`, `--host` (défaut 127.0.0.1), `--enfant`, `--retard S` et `--mourir` (qui sort avec le code 3). Il lit `taches.json` et `sans_etat` dans son dossier courant ;
 - `conftest.py` : la classe `Installation` fabrique un faux `Dashboard/` et ses modules voisins, avec `intervalle=0.1` et `delai_arret=2`. Les adresses `LOCAL` (127.0.0.1) et `DISTANT` (192.168.1.20) sont passées à `TestClient(client=...)`. En fin de test, un nettoyage tue tous les faux modules ;
 - `test_modules.py` (15 tests), `test_acces.py` (8 tests), `test_journal.py` (1 test).
 
@@ -99,7 +100,13 @@ cd backend
   - le clic sur ⏻ d'un module WORKING ouvre la pop-up, avec le focus sur « Annuler » ; Échap la ferme ;
   - un clic sur une carte OFF ne change pas d'URL ; allumer un module l'amène à ON ; un clic sur la carte allumée ouvre `/module/editor` ;
   - **défilement horizontal à 375 px : 0 px**, après correction : les cartes débordaient de 5 px à cause d'un long chemin dans l'encart d'erreur. Corrigé avec `min-w-0` sur l'`<article>` (élément de grille).
-- Défaut trouvé et corrigé pendant ces essais : `aria-disabled="true"` sur la carte (demandé par la spec v1.3) s'étendait au bouton ⏻, qui était annoncé comme désactivé. L'attribut est retiré et la spec §7.2 corrigée.
+- Étape 3, Playwright, même serveur de démo mais faux modules lancés avec `--host 0.0.0.0` (sinon l'iframe, ouverte par l'IP du conteneur, ne les joint pas). 12 vérifications OK :
+  - clic sur le titre d'une carte allumée → `/module/editor`, iframe avec le contenu du module, titre d'onglet « Montage IA · Dashboard », pas d'en-tête du dashboard ;
+  - ⏻ de la barre → voile « Montage IA est éteint » ; rallumer → le voile disparaît et l'iframe réaffiche le module ;
+  - « ← Dashboard » ramène à `/` ; mini-libellé « Génération du scénario · Scène 3/6 · 42 % » ; ⏻ sur un module WORKING → pop-up, Échap la ferme ;
+  - `/module/yt2tiktok` (éteint) et `/module/inexistant` → redirection vers `/` ;
+  - à 375 px : 0 px de débordement, cibles de la barre à 40 px.
+- Défaut trouvé et corrigé pendant ces essais : `aria-disabled="true" sur la carte (demandé par la spec v1.3) s'étendait au bouton ⏻, qui était annoncé comme désactivé. L'attribut est retiré et la spec §7.2 corrigée.
 - Vrai Generator branché le temps d'un essai, avec un lien symbolique supprimé ensuite : `STARTING` puis `ERROR`, code 1, et le journal affiché `ModuleNotFoundError: No module named 'dotenv'`. C'est normal ici, puisque le conteneur n'avait pas son `.venv`. Le chemin « mort inattendue » fonctionne donc avec une vraie app.
 
 ---
@@ -141,20 +148,17 @@ cd backend
 
 ## 4. Prochaines étapes, dans l'ordre
 
-1. **Essai réel sur le PC Windows** : `python main.py` (compile l'interface, il faut Node.js), puis allumer et éteindre les 3 apps depuis http://localhost:8080 et depuis le téléphone. Rappel §3.1 : garder `WEB_ACCESS_CODE` rempli dans le Generator.
-2. **Étape 3 : vue module** `/module/<id>` (spec §7.5), à la place de `frontend/src/pages/VueModule.tsx` :
-   - page `h-dvh flex flex-col`, hors de `Cadre` (pas d'en-tête ni de halo) mais toujours sous `Protege` ;
-   - barre `h-12` : `← Dashboard`, médaillon + nom, `BadgeEtat`, mini-libellé de la tâche (masqué sur téléphone), bouton `ExternalLink` (nouvel onglet) et `BoutonAlimentation petit` ;
-   - `<iframe src={adresseModule(m)}>` en `flex-1` ;
-   - redirection vers `/` si le module est OFF ou ERROR à l'ouverture ; voile « <nom> est éteint » + bouton principal « Retour au dashboard » si le module s'éteint pendant qu'on le regarde ;
-   - sondage de `GET /api/modules/<id>` toutes les 1,5 s.
-3. **Étape 4 : une PR par app** (spec §6.3) : route `GET /api/dashboard/etat` (contrat §6.2). Dans le Generator, supprimer aussi le code d'accès (`web/auth.py`, `web/server.py`, `common/config.py`, `.env.example`, `README.md`, `main.py doctor`, `tests/test_jobs_auth.py`, `tests/test_server_api.py`).
-4. *(plus tard)* File GPU (spec §9).
-5. *(plus tard)* Démarrage avec Windows (spec §11).
+1. **Essai réel sur le PC Windows** : `python main.py` (compile l'interface, il faut Node.js), puis allumer, ouvrir (vue module) et éteindre les 3 apps depuis http://localhost:8080 et depuis le téléphone. À surveiller :
+   - que chaque app s'affiche bien **dans l'iframe** : aucun en-tête `X-Frame-Options` n'a été trouvé dans les 3 dépôts, mais ce n'a pas été vérifié en conditions réelles ;
+   - Verger Drama : garder `WEB_ACCESS_CODE` rempli (§3.1) ; l'iframe demandera son code une fois par appareil ;
+   - l'invite Windows « autoriser Python sur les réseaux privés » au premier lancement de chaque module, à accepter pour l'accès depuis le téléphone.
+2. **Étape 4 : une PR par app** (spec §6.3) : route `GET /api/dashboard/etat` (contrat §6.2). Dans le Generator, supprimer aussi le code d'accès (`web/auth.py`, `web/server.py`, `common/config.py`, `.env.example`, `README.md`, `main.py doctor`, `tests/test_jobs_auth.py`, `tests/test_server_api.py`).
+3. *(plus tard)* File GPU (spec §9).
+4. *(plus tard)* Démarrage avec Windows (spec §11).
 
 ### Reproduire l'essai visuel (conteneur Linux)
 
-1. Créer un dossier avec `Dashboard/modules.toml`, `Dashboard/config.local.toml` (`code_acces = "1234"`) et des dossiers voisins contenant chacun une copie de `backend/tests/faux_module.py` nommée `main.py`. Chaque module a `python = "<chemin>/backend/.venv/bin/python"`.
+1. Créer un dossier avec `Dashboard/modules.toml`, `Dashboard/config.local.toml` (`code_acces = "1234"`) et des dossiers voisins contenant chacun une copie de `backend/tests/faux_module.py` nommée `main.py`. Chaque module a `python = "<chemin>/backend/.venv/bin/python"` et `commande = ["main.py", "--host", "0.0.0.0", "--port", "{port}"]`.
 2. Lancer `uvicorn.run(creer_app(charger(Path(".../modules.toml")), dossier_front=Path("frontend/dist")), host="0.0.0.0", port=8080)`.
 3. Utiliser Playwright (paquet npm `playwright`, `executablePath: "/opt/pw-browsers/chromium-1194/chrome-linux/chrome"`), en visant l'IP du conteneur (`hostname -I`) et non 127.0.0.1, sinon le code n'est pas demandé.
 4. Mesurer le débordement : `document.documentElement.scrollWidth - innerWidth` doit valoir 0 à 375 px.
@@ -174,5 +178,9 @@ cd backend
 - **Ne pas remettre `aria-disabled` sur `<article>`** dans `CarteModule.tsx` : il désactive aussi, pour l'accessibilité, le bouton ⏻ qu'il contient.
 - **Ne pas enlever `min-w-0`** de l'`<article>` : sans lui, un long message dans une carte fait déborder la page sur téléphone.
 - **Ne pas sortir `PopupArret` du portail** (`createPortal(…, document.body)`).
+- **Ne pas retirer `key={session}` de l'iframe** dans `VueModule.tsx` : sans lui, après un rallumage, l'iframe garde la page d'erreur de connexion chargée pendant l'arrêt.
+- **Ne pas remettre `/module/:id` sous `Cadre`** : la vue doit occuper toute la hauteur (`h-dvh`), sans l'en-tête du dashboard.
+- **Ne pas descendre sous `size-10`** pour les boutons icônes (guide §7 : 40 px au minimum).
+- Dans Playwright, pour ouvrir un module, cliquer sur le titre de la carte (`h2`, `force: true`) et non au centre du lien étiré : le bouton du journal, placé au-dessus, intercepte le clic (comportement voulu).
 - **Dans Playwright, ne pas attendre un état avec `text=ON`** : c'est une recherche insensible à la casse, et « M**on**tage » la satisfait. Utiliser `text="ON"` (entre guillemets).
 - Ne pas modifier les 3 apps depuis ce dépôt : chaque changement passe par une PR dans le dépôt de l'app (étape 4).
