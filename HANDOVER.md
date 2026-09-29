@@ -39,7 +39,8 @@ cd backend
 | `d69cf29` | Étape 1 : serveur (processus, états, code d'accès) + 24 tests |
 | `aae0eb8` | `HANDOVER.md`, `CLAUDE.md`, commandes de test Windows dans `README.md`, note `.venv` dans la spec §5.1 |
 | `2628a52` | Étape 2 : interface `frontend/` (connexion, accueil, cartes, bouton ⏻, journal, pop-up d'arrêt). Spec §7.2 : suppression d'`aria-disabled` sur la carte, lien étiré |
-| (ce commit) | Étape 3 : vue module `/module/:id` (barre + iframe, voile quand le module s'éteint). ⏻ « petit » en `size-10`. Option `--host` du faux module. Spec §7.5 précisée |
+| `0bf31f1` | Étape 3 : vue module `/module/:id` (barre + iframe, voile quand le module s'éteint). ⏻ « petit » en `size-10`. Option `--host` du faux module. Spec §7.5 précisée |
+| (ce commit) | Étape 4 livrée dans les 3 dépôts d'apps (voir §1.4) ; spec §6.3 et HANDOVER à jour |
 
 ### 1.2 Fichiers
 
@@ -111,6 +112,22 @@ cd backend
 
 ---
 
+### 1.4 Étape 4 : route d'état dans les 3 apps (une PR par dépôt)
+
+Essai réel des étapes 1 à 3 sur le PC Windows : **validé par l'utilisateur** le 2026-09-29 (« ça fonctionne bien »).
+
+| App | PR | Branche | Contenu | Vérifié (conteneur Linux) |
+|---|---|---|---|---|
+| Verger Drama | [LoKiseRaven/AI-Video-Generator#3](https://github.com/LoKiseRaven/AI-Video-Generator/pull/3) | `claude/dashboard-etat` | Route `api_etat_dashboard` (`web/server.py`) : tâche en cours, `gpu` vrai pour `assemblage`, `progression` toujours `null`. **Code d'accès supprimé** : `web/auth.py`, `/api/login`, `/api/session`, `WEB_ACCESS_CODE`, page `Connexion.tsx`, redirection 401 ; `create_app(taches=None)` ; `web/static/dist` recompilé | `pytest` 120 passed (126 avant) ; vrai serveur : démarre sans code, route OK, `/api/login` en 404 |
+| Short Studio | [LoKiseRaven/AI-YouTube-to-TikTok#1](https://github.com/LoKiseRaven/AI-YouTube-to-TikTok/pull/1) | `claude/dashboard-etat` | Route dans `yt2short/web/server.py` : `progression` = `fait / total` en %, `gpu` vrai pour `decoupage` | `pytest --ignore=tests/test_clipper.py` 27 passed (25 avant ; `test_clipper` exige PyTorch CUDA) ; vrai serveur avec la commande du Dashboard : route OK par l'IP réseau |
+| Montage IA | [LoKiseRaven/AI-Video-Editor#2](https://github.com/LoKiseRaven/AI-Video-Editor/pull/2) | `claude/dashboard-etat` | Routeur `backend/montage/api/dashboard.py` : tâches `en_cours` (progression %) **et `en_attente` (`position_file`)**, `gpu` vrai pour `analyse`. Registre `File.actives()` en mémoire dans `montage/taches.py`, car `Contexte.progres()` ne persiste pas la progression | `pytest` 44 passed, 14 skipped (ffmpeg absent) ; vrai serveur : route OK |
+
+Chaque dépôt documente la route dans son README (Verger Drama §3 ter, Short Studio « Depuis le Dashboard », Montage IA « Dashboard »). Short Studio et Montage IA ont aussi une entrée dans leur HANDOVER.
+
+Aucune modification du Dashboard lui-même n'a été nécessaire : il affiche déjà WORKING, WAITING, la progression et la file dès que la route répond (`detail_disponible` passe à `true`).
+
+---
+
 ## 2. Décisions de conception (et pourquoi)
 
 | Décision | Pourquoi |
@@ -135,7 +152,7 @@ cd backend
 
 ## 3. Bugs et incertitudes
 
-1. **Le Generator plante s'il est lancé sans `WEB_ACCESS_CODE`.** Dans `AI-Video-Generator/web/server.py:300-305`, `lancer()` lève `AppError("WEB_ACCESS_CODE est vide dans .env : choisis un code avant d'ouvrir l'interface au réseau …")` quand l'option `--local` est absente. Tant que l'étape 4 n'est pas faite, il faut donc **garder `WEB_ACCESS_CODE` rempli** dans le `.env` du Generator, sinon le dashboard l'affiche en `ERROR`. Avec le code rempli, sa route d'état répondra 401, et le dashboard l'affichera `ON` avec « État détaillé indisponible. », ce qui est attendu.
+1. **Tant que [LoKiseRaven/AI-Video-Generator#3](https://github.com/LoKiseRaven/AI-Video-Generator/pull/3) n'est pas fusionnée**, le Generator plante s'il est lancé sans `WEB_ACCESS_CODE`. Dans `AI-Video-Generator/web/server.py:300-305`, `lancer()` lève `AppError("WEB_ACCESS_CODE est vide dans .env : choisis un code avant d'ouvrir l'interface au réseau …")` quand l'option `--local` est absente. Tant que l'étape 4 n'est pas faite, il faut donc **garder `WEB_ACCESS_CODE` rempli** dans le `.env` du Generator, sinon le dashboard l'affiche en `ERROR`. Avec le code rempli, sa route d'état répondra 401, et le dashboard l'affichera `ON` avec « État détaillé indisponible. », ce qui est attendu.
 2. Windows : tests validés (§0), mais le **lancement réel des 3 apps** depuis le dashboard n'a pas encore été essayé sur le PC.
 3. `psutil.Process.cwd()` peut lever `AccessDenied` pour un processus d'un autre utilisateur ou lancé en administrateur. Dans ce cas, l'adoption par port échoue proprement : le module reste `OFF` et `demarrer` répond 409 « le port … est déjà utilisé ».
 4. Sous Windows, `terminate()` est brutal : les apps ne peuvent pas faire de ménage à l'arrêt. C'est accepté par la spec §5.3, la pop-up prévient.
@@ -148,12 +165,16 @@ cd backend
 
 ## 4. Prochaines étapes, dans l'ordre
 
-1. **Essai réel sur le PC Windows** : `python main.py` (compile l'interface, il faut Node.js), puis allumer, ouvrir (vue module) et éteindre les 3 apps depuis http://localhost:8080 et depuis le téléphone. À surveiller :
-   - que chaque app s'affiche bien **dans l'iframe** : aucun en-tête `X-Frame-Options` n'a été trouvé dans les 3 dépôts, mais ce n'a pas été vérifié en conditions réelles ;
-   - Verger Drama : garder `WEB_ACCESS_CODE` rempli (§3.1) ; l'iframe demandera son code une fois par appareil ;
-   - l'invite Windows « autoriser Python sur les réseaux privés » au premier lancement de chaque module, à accepter pour l'accès depuis le téléphone.
-2. **Étape 4 : une PR par app** (spec §6.3) : route `GET /api/dashboard/etat` (contrat §6.2). Dans le Generator, supprimer aussi le code d'accès (`web/auth.py`, `web/server.py`, `common/config.py`, `.env.example`, `README.md`, `main.py doctor`, `tests/test_jobs_auth.py`, `tests/test_server_api.py`).
-3. *(plus tard)* File GPU (spec §9).
+1. **Relire et fusionner les 3 PR** (§1.4). Sur le PC, dans chaque dépôt, après la fusion : `git pull`, puis relancer la suite de tests complète, qui n'a pas pu tourner en entier dans le conteneur :
+   - Short Studio : `test_clipper.py`, qui demande CUDA ;
+   - Montage IA : les 14 tests qui demandent ffmpeg ;
+   - Verger Drama : la suite complète avec les paquets NVIDIA.
+2. **Essai réel avec le Dashboard** : lancer une vraie tâche dans chaque app et vérifier que la carte passe à WORKING, avec l'étape et le pourcentage (Short Studio, Montage IA). Dans Montage IA, lancer deux tâches pour voir WAITING et « prochain dans la file ». Verger Drama doit démarrer même sans `WEB_ACCESS_CODE`, et l'iframe ne doit plus demander de code.
+3. *(plus tard)* File GPU (spec §9) : c'est le prochain gros chantier. À spécifier avec l'utilisateur :
+   - qui arbitre (le Dashboard, via `DASHBOARD_URL`, déjà transmis aux modules) ;
+   - la priorité entre apps ;
+   - que faire si le Dashboard est éteint ;
+   - la granularité : la tâche entière ou seulement les étapes GPU (la transcription Whisper par exemple).
 4. *(plus tard)* Démarrage avec Windows (spec §11).
 
 ### Reproduire l'essai visuel (conteneur Linux)
@@ -183,4 +204,6 @@ cd backend
 - **Ne pas descendre sous `size-10`** pour les boutons icônes (guide §7 : 40 px au minimum).
 - Dans Playwright, pour ouvrir un module, cliquer sur le titre de la carte (`h2`, `force: true`) et non au centre du lien étiré : le bouton du journal, placé au-dessus, intercepte le clic (comportement voulu).
 - **Dans Playwright, ne pas attendre un état avec `text=ON`** : c'est une recherche insensible à la casse, et « M**on**tage » la satisfait. Utiliser `text="ON"` (entre guillemets).
-- Ne pas modifier les 3 apps depuis ce dépôt : chaque changement passe par une PR dans le dépôt de l'app (étape 4).
+- Ne pas modifier les 3 apps depuis ce dépôt : chaque changement passe par une PR dans le dépôt de l'app.
+- **Ne pas changer le contrat de `/api/dashboard/etat`** (spec §6.2) d'un seul côté : les 3 apps et `backend/dashboard/etat.py` (`_taches_valides`, `etat_selon_taches`) doivent rester d'accord.
+- Dans un clone superficiel d'une app (`git clone --depth 1`), `git push --force-with-lease` sur une branche est refusé (« stale info ») car seul `main` est suivi : passer le SHA attendu, `--force-with-lease=<branche>:<sha>`.

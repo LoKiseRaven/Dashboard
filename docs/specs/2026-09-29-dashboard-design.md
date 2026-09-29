@@ -232,7 +232,7 @@ Passage d'un état à l'autre :
 
 ### 6.3 Modifications à apporter aux 3 apps
 
-Chaque modification fera l'objet d'une PR séparée dans le dépôt de l'app, après validation de cette spec :
+Chaque modification fait l'objet d'une PR séparée dans le dépôt de l'app. **Livré le 2026-09-29** : [LoKiseRaven/AI-Video-Generator#3](https://github.com/LoKiseRaven/AI-Video-Generator/pull/3), [LoKiseRaven/AI-YouTube-to-TikTok#1](https://github.com/LoKiseRaven/AI-YouTube-to-TikTok/pull/1), [LoKiseRaven/AI-Video-Editor#2](https://github.com/LoKiseRaven/AI-Video-Editor/pull/2). Seul Montage IA a une vraie file (WAITING possible) ; les deux autres n'exécutent qu'une tâche à la fois.
 
 | App | Travail |
 |---|---|
