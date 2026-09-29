@@ -142,7 +142,7 @@ gpu = true
 - `nom` et `emoji` reprennent le logo de l'app : le **dernier mot** du nom s'affiche en `texte-degrade`, comme dans l'en-tête de chaque app.
 - `dossier` est relatif au dossier du dashboard.
 - `{port}` est remplacé par le port du module.
-- Le Python utilisé est, dans cet ordre : la clé optionnelle `python` du module, puis `<dossier>/.venv/Scripts/python.exe` (ou `bin/python`) s'il existe, puis `py -3` sous Windows (`python3` ailleurs). **Jamais le Python du venv du dashboard**, qui n'a pas les dépendances des modules.
+- Le Python utilisé est, dans cet ordre : la clé optionnelle `python` du module, puis `<dossier>/.venv/Scripts/python.exe` (ou `bin/python`) s'il existe, puis `py -3` sous Windows (`python3` ailleurs). Vérifié le 2026-09-29 : les 3 dépôts ont un `.venv` à leur racine, c'est donc lui qui est utilisé. **Jamais le Python du venv du dashboard**, qui n'a pas les dépendances des modules.
 - Au démarrage, le dashboard vérifie la config : ports distincts, dossier et `main.py` présents. Un module mal configuré s'affiche avec l'état `ERROR` et le message correspondant, sans empêcher les autres de fonctionner.
 
 ### 5.2 Lancement

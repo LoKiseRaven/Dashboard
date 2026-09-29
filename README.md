@@ -33,8 +33,22 @@ Journaux des modules : `journaux/<id>.log` (lancement en cours) et `<id>.log.1` 
 
 ## Tests
 
+Depuis le dossier `backend/`. Le premier `python main.py` a créé `backend/.venv` ; installe ensuite les outils de test une fois :
+
+**Windows (PowerShell ou cmd) :**
+
 ```
 cd backend
-.venv/bin/pip install -r requirements-dev.txt   # Windows : .venv\Scripts\pip
+.venv\Scripts\python -m pip install -r requirements-dev.txt
+.venv\Scripts\python -m pytest
+```
+
+**Linux / macOS :**
+
+```
+cd backend
+.venv/bin/python -m pip install -r requirements-dev.txt
 .venv/bin/python -m pytest
 ```
+
+Résultat attendu : `24 passed`. Les tests lancent de faux modules (`tests/faux_module.py`) sur des ports libres : ils ne touchent pas aux vrais modules.
