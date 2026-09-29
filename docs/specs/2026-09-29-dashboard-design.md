@@ -1,6 +1,8 @@
 # Dashboard — spécification
 
-Version 1.1, du 2026-09-29. Changement depuis la v1 : le code d'accès passe du Generator au dashboard. Statut : **à valider**.
+Version 1.2, du 2026-09-29.
+- v1.1 : le code d'accès passe du Generator au dashboard.
+- v1.2 : le dashboard s'appelle « Dashboard » 🤓 ; les cartes reprennent le nom et l'emoji de chaque app, sans description. Statut : **à valider**.
 Guide de style : `docs/design/style.md`, copie conforme de celui d'AI-Video-Editor. L'interface doit le respecter à la lettre.
 
 ---
@@ -9,11 +11,13 @@ Guide de style : `docs/design/style.md`, copie conforme de celui d'AI-Video-Edit
 
 Une page d'accueil unique pour piloter mes applications locales :
 
-| Module | Dépôt / dossier | Rôle |
-|---|---|---|
-| AI-Video-Generator | `../AI-Video-Generator` | Mini-séries « fruits IA » : veille, scénario, prompts, montage |
-| AI-YouTube-to-TikTok | `../AI-YouTube-to-TikTok` | Découpe de vidéos YouTube en extraits verticaux, puis publication |
-| AI-Video-Editor | `../AI-Video-Editor` | Montage IA |
+| Module | Nom affiché par l'app | Dépôt / dossier | Rôle |
+|---|---|---|---|
+| AI-Video-Generator | 🍓 Verger **Drama** | `../AI-Video-Generator` | Mini-séries « fruits IA » : veille, scénario, prompts, montage |
+| AI-YouTube-to-TikTok | ✂️ Short **Studio** | `../AI-YouTube-to-TikTok` | Découpe de vidéos YouTube en extraits verticaux, puis publication |
+| AI-Video-Editor | 🎬 Montage **IA** | `../AI-Video-Editor` | Montage IA |
+
+Le nom et l'emoji de chaque carte sont ceux que l'app affiche déjà (titre de la page, favicon, logo de l'en-tête).
 
 Le dashboard permet de :
 1. voir l'état de chaque module (OFF, STARTING, ON, WORKING, WAITING…) ;
@@ -107,8 +111,7 @@ port = 8080          # un port différent de 8000, pour ne pas gêner un module 
 
 [[modules]]
 id = "generator"
-nom = "AI Video Generator"
-description = "Mini-séries fruits IA : veille, scénario, prompts, montage."
+nom = "Verger Drama"
 emoji = "🍓"
 dossier = "../AI-Video-Generator"
 commande = ["main.py", "web", "--port", "{port}"]
@@ -117,8 +120,7 @@ gpu = true
 
 [[modules]]
 id = "yt2tiktok"
-nom = "YouTube → TikTok"
-description = "Découpe une vidéo YouTube en extraits verticaux et les publie."
+nom = "Short Studio"
 emoji = "✂️"
 dossier = "../AI-YouTube-to-TikTok"
 commande = ["main.py", "web", "--host", "0.0.0.0", "--port", "{port}", "--no-browser"]
@@ -127,8 +129,7 @@ gpu = true
 
 [[modules]]
 id = "editor"
-nom = "AI Video Editor"
-description = "Montage IA."
+nom = "Montage IA"
 emoji = "🎬"
 dossier = "../AI-Video-Editor"
 commande = ["main.py", "--port", "{port}"]
@@ -136,6 +137,7 @@ port = 8103
 gpu = true
 ```
 
+- `nom` et `emoji` reprennent le logo de l'app : le **dernier mot** du nom s'affiche en `texte-degrade`, comme dans l'en-tête de chaque app.
 - `dossier` est relatif au dossier du dashboard.
 - `{port}` est remplacé par le port du module.
 - Le Python utilisé est, dans cet ordre : la clé optionnelle `python` du module, puis `<dossier>/.venv/Scripts/python.exe` (ou `bin/python`) s'il existe, puis `py -3` sous Windows (`python3` ailleurs). **Jamais le Python du venv du dashboard**, qui n'a pas les dépendances des modules.
@@ -249,7 +251,7 @@ Toutes les classes viennent de `style.md`. Seuls les éléments propres au dashb
 
 Recette de `style.md` §5.21, telle quelle :
 - page entière avec le halo intense, carte `max-w-sm` translucide ;
-- médaillon emoji du dashboard, `h1` avec le second mot en dégradé, accroche « Entre ton code pour piloter tes modules. » ;
+- médaillon 🤓, `h1` « Dash**board** » (« board » en dégradé), accroche « Entre ton code pour piloter tes modules. » ;
 - champ `type="password"` avec l'icône `Lock`, `autocomplete="current-password"`, focus automatique ;
 - bouton principal `large` « Entrer → » ; erreur sous le champ en `text-red-200` (« Code incorrect. ») ;
 - mention `text-xs text-doux` : « Code mémorisé 30 jours sur cet appareil. »
@@ -258,7 +260,7 @@ Toute réponse 401 de l'API renvoie vers `/connexion`, puis vers la page demand�
 
 ### 7.1 Page d'accueil `/`
 
-- Halo global (§4.6) et en-tête collant (§5.15) avec le logo : médaillon emoji + nom, le second mot en `texte-degrade` (voir la question ouverte n° 1). À droite, un bouton icône `fantome` `LogOut` (`aria-label="Se déconnecter"`), masqué quand on est sur le PC lui-même (pas de code, §10).
+- Halo global (§4.6) et en-tête collant (§5.15) avec le logo : médaillon 🤓 + « Dash**board** », « board » en `texte-degrade` (le nom tient en un mot, on coupe donc à « board » pour garder la signature du style). Favicon : 🤓, titre de l'onglet : « Dashboard ». À droite, un bouton icône `fantome` `LogOut` (`aria-label="Se déconnecter"`), masqué quand on est sur le PC lui-même (pas de code, §10).
 - Conteneur `mx-auto max-w-6xl px-4 pt-6 pb-40`.
 - En-tête de page : `h1` « Modules », avec en sous-titre un résumé (`text-sm text-doux`, ex. « 1 allumé · 1 au travail »).
 - Grille `grid gap-4 md:grid-cols-2 lg:grid-cols-3`, avec cartes en cascade (`animate-apparition`, décalage de 60 ms).
@@ -269,10 +271,8 @@ Toute réponse 401 de l'API renvoie vers `/connexion`, puis vers la page demand�
 
 ```
 ┌──────────────────────────────────────────────┐
-│ [🍓]  AI Video Generator             ( ⏻ )   │  médaillon, h2, bouton alimentation
+│ [🍓]  Verger Drama                   ( ⏻ )   │  médaillon, h2 (« Drama » en dégradé), bouton
 │       ● WORKING                              │  badge d'état
-│                                              │
-│ Mini-séries fruits IA : veille, scénario…    │  description text-sm text-doux
 │                                              │
 │ ┌ TÂCHE EN COURS ──────────────────────────┐ │  zone interne bg-black/30 rounded-2xl
 │ │ Génération du scénario · Scène 3/6       │ │
@@ -313,7 +313,7 @@ Toute réponse 401 de l'API renvoie vers `/connexion`, puis vers la page demand�
   - **ON / WORKING / WAITING** : `bg-rose text-white shadow-lg shadow-rose/30 hover:bg-rose-fonce`, `aria-label="Éteindre <nom>"`. C'est le seul aplat rose de la carte, ce qui respecte la règle « un seul principal par zone » ;
   - **STARTING / STOPPING** : désactivé, icône remplacée par `Loader2 animate-spin`.
 - `aria-pressed` vaut `true` quand le module est allumé.
-- En cas d'échec de la requête : notification d'erreur (§5.18), ex. « Impossible d'allumer AI Video Generator : le port 8101 est déjà utilisé. »
+- En cas d'échec de la requête : notification d'erreur (§5.18), ex. « Impossible d'allumer Verger Drama : le port 8101 est déjà utilisé. »
 
 ### 7.4 Pop-up de confirmation d'arrêt
 
@@ -322,7 +322,7 @@ Elle s'affiche quand l'arrêt renvoie 409, c'est-à-dire quand le module est WOR
 - Voile : `fixed inset-0 z-50 grid place-items-center bg-black/60 backdrop-blur-sm px-4`.
 - Boîte : `w-full max-w-md animate-apparition rounded-3xl border border-bord bg-surface/95 p-6 shadow-2xl shadow-black/60 backdrop-blur-xl`, avec `role="alertdialog"`, `aria-modal="true"` et `aria-labelledby`.
 - Contenu :
-  - `h2 text-xl font-bold` : « Arrêter AI Video Generator ? » ;
+  - `h2 text-xl font-bold` : « Arrêter Verger Drama ? » ;
   - encart d'avertissement (`border-attente/30 bg-attente/10 text-amber-100` + `TriangleAlert`) : « Une tâche est en cours. Elle sera interrompue et perdue. » ;
   - liste des tâches (libellé · étape · progression) ;
   - boutons alignés à droite, `flex flex-wrap justify-end gap-2` : **« Annuler »** (`secondaire`, focus initial) et **« Arrêter quand même »** (`danger`, icône `Power`).
@@ -340,7 +340,7 @@ Elle s'affiche quand l'arrêt renvoie 409, c'est-à-dire quand le module est WOR
   - à droite : bouton icône `ExternalLink` (`aria-label="Ouvrir dans un nouvel onglet"`) et le bouton d'alimentation en petit (`size-9`), avec la même pop-up.
 - En dessous : `<iframe class="min-h-0 flex-1 w-full border-0 bg-fond">`, avec `src = ${location.protocol}//${location.hostname}:${port}/`. L'URL fonctionne donc depuis le téléphone comme depuis le PC.
 - Si le module est OFF ou ERROR à l'ouverture de l'URL : redirection vers `/`.
-- Si le module s'arrête pendant qu'on le regarde : voile par-dessus l'iframe, « AI Video Generator est éteint », avec un bouton principal « Retour au dashboard ».
+- Si le module s'arrête pendant qu'on le regarde : voile par-dessus l'iframe, « Verger Drama est éteint », avec un bouton principal « Retour au dashboard ».
 - La barre du haut suit l'état du module toutes les 1,5 s.
 
 ### 7.6 Ton
@@ -353,7 +353,7 @@ Tutoiement, verbes d'action (« Allumer », « Éteindre », « Arrêter quand m
 
 | Méthode | Route | Réponse |
 |---|---|---|
-| GET | `/api/modules` | liste des modules : `id, nom, description, emoji, port, gpu, etat, message, taches[], depuis` |
+| GET | `/api/modules` | liste des modules : `id, nom, emoji, port, gpu, etat, message, taches[], depuis` |
 | GET | `/api/modules/{id}` | un module |
 | POST | `/api/modules/{id}/demarrer` | 202 ; 409 si ce n'est pas possible (avec `detail`) |
 | POST | `/api/modules/{id}/arreter` | corps `{force}` ; 202 ; **409 `{detail, taches}` si occupé et `force=false`** |
@@ -435,7 +435,5 @@ Prévu : une tâche du Planificateur de tâches Windows, déclenchée à l'ouver
 
 ## 14. Questions ouvertes
 
-1. **Nom et emoji du dashboard.** Proposition : « Studio **Hub** » avec 🎛️. Le second mot est en dégradé.
-2. **Ports.** Dashboard sur 8080, modules sur 8101, 8102 et 8103 : ça te va ?
-3. **Noms des dossiers sur le disque.** Sont-ils exactement `AI-Video-Generator`, `AI-YouTube-to-TikTok` et `AI-Video-Editor`, à côté de `Dashboard` ?
-4. **Emojis et descriptions des cartes.** 🍓, ✂️, 🎬 : à ajuster.
+1. **Ports.** Dashboard sur 8080, modules sur 8101, 8102 et 8103 : ça te va ?
+2. **Noms des dossiers sur le disque.** Sont-ils exactement `AI-Video-Generator`, `AI-YouTube-to-TikTok` et `AI-Video-Editor`, à côté de `Dashboard` ?
