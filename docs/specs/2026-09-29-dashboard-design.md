@@ -232,7 +232,7 @@ Chaque modification fera l'objet d'une PR séparée dans le dépôt de l'app, ap
 
 | App | Travail |
 |---|---|
-| AI-Video-Generator | Route `/api/dashboard/etat` branchée sur `GestionnaireTaches`. **Suppression du code d'accès** : `web/auth.py`, la page de saisie du code, la vérification du cookie, `WEB_ACCESS_CODE` (config, `.env.example`, README) et la ligne correspondante de `main.py doctor`. L'option `--local` reste, mais ne sert plus qu'à écouter sur 127.0.0.1 |
+| AI-Video-Generator | Route `/api/dashboard/etat` branchée sur `GestionnaireTaches`. **Suppression du code d'accès** : `web/auth.py`, la page de saisie du code, la vérification du cookie, `WEB_ACCESS_CODE` (`common/config.py`, `.env.example`, `README.md`), la ligne correspondante de `main.py doctor`, et les tests concernés (`tests/test_jobs_auth.py`, `tests/test_server_api.py`). L'option `--local` reste, mais ne sert plus qu'à écouter sur 127.0.0.1 |
 | AI-YouTube-to-TikTok | Route branchée sur `yt2short/web/jobs.py` |
 | AI-Video-Editor | Route branchée sur la table `taches` |
 | Les 3 | Vérifier que rien n'empêche l'affichage en iframe : pas d'en-tête `X-Frame-Options` ni `frame-ancestors`. Aucun trouvé à ce jour |
