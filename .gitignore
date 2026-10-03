@@ -1,0 +1,21 @@
+# Données locales
+config.local.toml
+etat/
+journaux/
+.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.ruff_cache/
+
+# Frontend
+node_modules/
+frontend/dist/
+
+# Divers
+.DS_Store
+Thumbs.db
+*.tsbuildinfo

@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@theme {
+  --color-fond: #09090b;        /* fond de page */
+  --color-surface: #141418;     /* cartes */
+  --color-surface-2: #1c1c22;   /* champs, zones internes, tuiles, pastilles */
+  --color-bord: #2a2a33;        /* toutes les bordures fines */
+  --color-texte: #f4f4f5;       /* texte principal */
+  --color-doux: #a1a1aa;        /* texte secondaire, libellés */
+  --color-rose: #fe2c55;        /* action principale, accent chaud */
+  --color-rose-fonce: #e0193f;  /* survol de l'action principale */
+  --color-cyan: #25f4ee;        /* accent froid : liens, info, focus, progression */
+  --color-ok: #22c55e;
+  --color-attente: #f59e0b;
+  --color-ko: #ef4444;
+
+  --font-texte: "Inter Variable", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-titre: "Space Grotesk Variable", "Inter Variable", system-ui, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", Consolas, monospace;
+
+  --animate-apparition: apparition 0.35s ease-out both;
+  --animate-scintille: scintille 1.6s linear infinite;
+  --animate-pulse-doux: pulse-doux 1.8s ease-in-out infinite;
+
+  @keyframes apparition {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: none; }
+  }
+  @keyframes scintille {
+    from { background-position: -200% 0; }
+    to { background-position: 200% 0; }
+  }
+  @keyframes pulse-doux {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.45; }
+  }
+}
+
+@layer base {
+  html { color-scheme: dark; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: var(--color-fond);
+    color: var(--color-texte);
+    font-family: var(--font-texte);
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3 { font-family: var(--font-titre); letter-spacing: -0.02em; }
+  :focus-visible { outline: 2px solid var(--color-cyan); outline-offset: 2px; }
+  ::selection { background: color-mix(in srgb, var(--color-rose) 45%, transparent); }
+}
+
+/* Texte en dégradé rose → cyan (un mot du logo, jamais un paragraphe) */
+@utility texte-degrade {
+  background: linear-gradient(90deg, var(--color-rose), var(--color-cyan));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Fond en dégradé rose → cyan (barres de progression, pastilles « vedette ») */
+@utility fond-degrade {
+  background: linear-gradient(90deg, var(--color-rose), var(--color-cyan));
+}
+
+/* Squelette de chargement scintillant */
+@utility squelette {
+  background: linear-gradient(90deg, var(--color-surface) 25%, var(--color-surface-2) 50%, var(--color-surface) 75%);
+  background-size: 200% 100%;
+  animation: var(--animate-scintille);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

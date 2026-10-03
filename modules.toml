@@ -1,0 +1,35 @@
+# Modules pilotés par le dashboard (spec §5.1).
+# `dossier` est relatif à ce fichier ; `{port}` est remplacé par le port du module.
+# Le dernier mot de `nom` s'affiche en dégradé, comme dans l'en-tête de chaque app.
+# Clé optionnelle `python` : l'interpréteur à utiliser (par défaut : le .venv du module,
+# sinon le Python du système).
+
+[dashboard]
+port = 8080
+
+[[modules]]
+id = "generator"
+nom = "Verger Drama"
+emoji = "🍓"
+dossier = "../AI-Video-Generator"
+commande = ["main.py", "web", "--port", "{port}"]
+port = 8081
+gpu = true
+
+[[modules]]
+id = "yt2tiktok"
+nom = "Short Studio"
+emoji = "✂️"
+dossier = "../AI-YouTube-to-TikTok"
+commande = ["main.py", "web", "--host", "0.0.0.0", "--port", "{port}", "--no-browser"]
+port = 8082
+gpu = true
+
+[[modules]]
+id = "editor"
+nom = "Montage IA"
+emoji = "🎬"
+dossier = "../AI-Video-Editor"
+commande = ["main.py", "--port", "{port}"]
+port = 8083
+gpu = true
