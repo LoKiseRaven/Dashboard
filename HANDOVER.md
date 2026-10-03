@@ -1,6 +1,6 @@
 # HANDOVER — Dashboard
 
-Passation de la session du 2026-09-29. Branche : `claude/fervent-cray-gczk5v`. Aucune PR n'est ouverte pour l'instant.
+Passation de la session du 2026-09-29. Branche : `claude/fervent-cray-gczk5v` → PR [LoKiseRaven/Dashboard#1](https://github.com/LoKiseRaven/Dashboard/pull/1) (tout commit poussé sur la branche la met à jour ; ne pas en ouvrir une autre).
 
 > **Règle** : ce fichier est mis à jour **avant chaque commit** (voir `CLAUDE.md`).
 
