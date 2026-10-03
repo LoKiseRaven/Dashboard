@@ -124,6 +124,15 @@ Essai réel des étapes 1 à 3 sur le PC Windows : **validé par l'utilisateur**
 
 Chaque dépôt documente la route dans son README (Verger Drama §3 ter, Short Studio « Depuis le Dashboard », Montage IA « Dashboard »). Short Studio et Montage IA ont aussi une entrée dans leur HANDOVER.
 
+**Test d'ensemble (2026-10-03, après l'ouverture des PR, qui aurait dû le précéder)** : le Dashboard pilotait les 3 vraies apps sur leurs branches `claude/dashboard-etat`, avec les commandes de `modules.toml` et `ffmpeg` installé par `apt` dans le conteneur. Résultats :
+- les 3 apps passent à ON en environ 18 s, avec `detail_disponible = true` pour chacune ;
+- Montage IA, deux vrais imports à la suite : WORKING « Import de video1.mp4 » 0 → 34 → 80 %, avec « Import de video2.mp4 » `en_attente` en position 1, puis la 2ᵉ en cours, puis ON ;
+- Montage IA, une vraie analyse : WORKING avec `gpu = true`. Elle échoue ensuite sur « 403 Forbidden », car le téléchargement du modèle Whisper est bloqué dans le conteneur ; ce n'est pas un bug ;
+- dans le navigateur, pendant l'import d'une vidéo de 10 min : la carte affiche la vraie tâche. ⏻ ouvre la pop-up qui la liste, « Arrêter quand même » mène à OFF, et **aucun processus survivant** n'est trouvé dans `ai-video-editor` (port 8083 libre) ;
+- vue module : Verger Drama s'affiche directement, **sans écran de code** ; Short Studio s'affiche aussi ;
+- avec ffmpeg, les suites complètes passent : Montage IA 58 passed (0 skipped), Verger Drama 120 passed ;
+- non testé : une vraie tâche dans Short Studio (le découpage demande YouTube) et dans Verger Drama (la génération demande Claude Code). Le chemin d'affichage est le même que pour Montage IA.
+
 Aucune modification du Dashboard lui-même n'a été nécessaire : il affiche déjà WORKING, WAITING, la progression et la file dès que la route répond (`detail_disponible` passe à `true`).
 
 ---
@@ -165,7 +174,7 @@ Aucune modification du Dashboard lui-même n'a été nécessaire : il affiche d�
 
 ## 4. Prochaines étapes, dans l'ordre
 
-1. **Relire et fusionner les 3 PR** (§1.4). Sur le PC, dans chaque dépôt, après la fusion : `git pull`, puis relancer la suite de tests complète, qui n'a pas pu tourner en entier dans le conteneur :
+1. **Relire et fusionner les 3 PR** (§1.4, test d'ensemble fait dans le conteneur). Sur le PC, dans chaque dépôt, après la fusion : `git pull`, puis relancer la suite de tests complète, qui n'a pas pu tourner en entier dans le conteneur :
    - Short Studio : `test_clipper.py`, qui demande CUDA ;
    - Montage IA : les 14 tests qui demandent ffmpeg ;
    - Verger Drama : la suite complète avec les paquets NVIDIA.
@@ -205,5 +214,6 @@ Aucune modification du Dashboard lui-même n'a été nécessaire : il affiche d�
 - Dans Playwright, pour ouvrir un module, cliquer sur le titre de la carte (`h2`, `force: true`) et non au centre du lien étiré : le bouton du journal, placé au-dessus, intercepte le clic (comportement voulu).
 - **Dans Playwright, ne pas attendre un état avec `text=ON`** : c'est une recherche insensible à la casse, et « M**on**tage » la satisfait. Utiliser `text="ON"` (entre guillemets).
 - Ne pas modifier les 3 apps depuis ce dépôt : chaque changement passe par une PR dans le dépôt de l'app.
+- **Ne pas ouvrir de PR dans une app avant le test d'ensemble avec le Dashboard** (§1.4) : tests unitaires de l'app, puis Dashboard + vraie app lancée par `modules.toml`, avec au moins une vraie tâche observée. Pour lancer Montage IA sans réinstaller : lien `backend/.venv` vers un venv déjà prêt + `touch <venv>/.installe`, à retirer ensuite.
 - **Ne pas changer le contrat de `/api/dashboard/etat`** (spec §6.2) d'un seul côté : les 3 apps et `backend/dashboard/etat.py` (`_taches_valides`, `etat_selon_taches`) doivent rester d'accord.
 - Dans un clone superficiel d'une app (`git clone --depth 1`), `git push --force-with-lease` sur une branche est refusé (« stale info ») car seul `main` est suivi : passer le SHA attendu, `--force-with-lease=<branche>:<sha>`.
