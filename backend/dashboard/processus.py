@@ -109,8 +109,8 @@ def lancer(config: Config, module: Module, dashboard_url: str) -> subprocess.Pop
                 proc = subprocess.Popen(commande(module), creationflags=base | subprocess.CREATE_BREAKAWAY_FROM_JOB,
                                         **options)
             except OSError:
-                sortie.write("⚠  [dashboard] Détachement refusé par Windows : le module s'arrêtera avec le "
-                             "dashboard.\n".encode())
+                sortie.write(f"{time.strftime('%H:%M:%S')} WARNING Détachement refusé par Windows : le module "
+                             "s'arrêtera avec le dashboard.\n".encode())
                 sortie.flush()
                 proc = subprocess.Popen(commande(module), creationflags=base, **options)
         else:

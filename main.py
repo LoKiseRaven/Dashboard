@@ -19,6 +19,7 @@ import shutil
 import socket
 import subprocess
 import sys
+import time
 import tomllib
 from pathlib import Path
 
@@ -30,6 +31,11 @@ REQUIREMENTS = BACKEND / "requirements.txt"
 MARQUEUR = VENV / ".installe"
 CONFIG_LOCALE = RACINE / "config.local.toml"
 VERSIONS = ((3, 11), (3, 13))
+
+
+def journal(message: str, niveau: str = "INFO") -> None:
+    """Même format que les journaux du serveur et des modules : « 14:02:11 INFO    message »."""
+    print(f"{time.strftime('%H:%M:%S')} {niveau:<7} {message}", flush=True)
 
 
 def python_venv() -> Path:
@@ -50,10 +56,10 @@ def lancer(cmd: list[str | Path], cwd: Path | None = None) -> None:
 
 def preparer_python() -> None:
     if not python_venv().exists():
-        print("Création de l'environnement Python (backend/.venv)…")
+        journal("Création de l'environnement Python (backend/.venv)…")
         lancer([sys.executable, "-m", "venv", VENV])
     if not MARQUEUR.exists() or REQUIREMENTS.stat().st_mtime > MARQUEUR.stat().st_mtime:
-        print("Installation des dépendances Python…")
+        journal("Installation des dépendances Python…")
         lancer([python_venv(), "-m", "pip", "install", "--quiet", "--upgrade", "pip"])
         lancer([python_venv(), "-m", "pip", "install", "--quiet", "-r", REQUIREMENTS])
         MARQUEUR.touch()
@@ -74,13 +80,13 @@ def preparer_interface() -> None:
     npm = shutil.which("npm")
     if npm is None:
         if (FRONTEND / "dist" / "index.html").exists():
-            print("⚠  npm introuvable : l'interface existante (peut-être ancienne) est utilisée.")
+            journal("npm introuvable : l'interface existante (peut-être ancienne) est utilisée.", "WARNING")
             return
         sys.exit("npm introuvable : installe Node.js (https://nodejs.org) pour compiler l'interface.")
     if not (FRONTEND / "node_modules").exists():
-        print("Installation des dépendances de l'interface…")
+        journal("Installation des dépendances de l'interface…")
         lancer([npm, "install", "--silent"], cwd=FRONTEND)
-    print("Compilation de l'interface…")
+    journal("Compilation de l'interface…")
     lancer([npm, "run", "build", "--silent"], cwd=FRONTEND)
 
 
@@ -107,7 +113,7 @@ def demander_code() -> str | None:
         break
     # Une chaîne JSON est une chaîne TOML valide (guillemets et échappements compatibles).
     CONFIG_LOCALE.write_text(f"code_acces = {json.dumps(code, ensure_ascii=False)}\n", encoding="utf-8")
-    print("Code enregistré dans config.local.toml.\n")
+    journal("Code enregistré dans config.local.toml.")
     return code
 
 
@@ -135,16 +141,18 @@ def main() -> None:
     reseau = bool(code_acces() or demander_code())
     hote = "0.0.0.0" if reseau else "127.0.0.1"
 
-    print(f"\n🤓 Dashboard : http://localhost:{port}")
+    journal(f"Dashboard : http://localhost:{port}")
     ip = adresse_locale()
     if not reseau:
-        print("   ⚠  Aucun code d'accès défini : le dashboard n'est accessible que depuis ce PC.")
+        journal("Aucun code d'accès défini : le dashboard n'est accessible que depuis ce PC.", "WARNING")
     elif ip:
-        print(f"   Depuis ton téléphone (même Wi-Fi) : http://{ip}:{port}")
-    print("   Ctrl+C pour arrêter (les modules allumés continuent de tourner).\n")
+        journal(f"Depuis ton téléphone (même Wi-Fi) : http://{ip}:{port}")
+    journal("Ctrl+C pour arrêter (les modules allumés continuent de tourner).")
     try:
         subprocess.run([str(python_venv()), "-m", "uvicorn", "--factory", "dashboard.app:creer_app_defaut",
-                        "--host", hote, "--port", str(port)], cwd=BACKEND)
+                        "--host", hote, "--port", str(port),
+                        # Journal au format commun, sans une ligne par requête GET/POST.
+                        "--log-config", str(BACKEND / "journalisation.json"), "--no-access-log"], cwd=BACKEND)
     except KeyboardInterrupt:
         pass
 
