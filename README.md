@@ -29,7 +29,7 @@ python main.py
 2. sinon, le `.venv` du module ;
 3. sinon, le Python du système.
 
-Journaux des modules : `journaux/<id>.log` (lancement en cours) et `<id>.log.1` (lancement précédent).
+Journaux des modules : `journaux/<id>.log` (lancement en cours) et `<id>.log.1` (lancement précédent). Le dashboard et les 3 apps écrivent tous au même format, `14:02:11 INFO    message`, sans une ligne par requête GET/POST.
 
 ## Développer l'interface
 
@@ -62,4 +62,4 @@ cd backend
 .venv/bin/python -m pytest
 ```
 
-Résultat attendu : `24 passed`. Les tests lancent de faux modules (`tests/faux_module.py`) sur des ports libres : ils ne touchent pas aux vrais modules.
+Résultat attendu : `25 passed`. Les tests lancent de faux modules (`tests/faux_module.py`) sur des ports libres : ils ne touchent pas aux vrais modules.

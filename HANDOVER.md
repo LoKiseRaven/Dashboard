@@ -1,6 +1,6 @@
 # HANDOVER — Dashboard
 
-Passation de la session du 2026-09-29. Branche : `claude/fervent-cray-gczk5v` → PR [LoKiseRaven/Dashboard#1](https://github.com/LoKiseRaven/Dashboard/pull/1) (tout commit poussé sur la branche la met à jour ; ne pas en ouvrir une autre).
+Passation de la session du 2026-09-29. Branche : `claude/fervent-cray-gczk5v`. [LoKiseRaven/Dashboard#1](https://github.com/LoKiseRaven/Dashboard/pull/1) (étapes 1 à 4) est **fusionnée** ; la branche est repartie de `main` le 2026-10-04 pour le journal commun (§1.5), qui fait l'objet d'une nouvelle PR.
 
 > **Règle** : ce fichier est mis à jour **avant chaque commit** (voir `CLAUDE.md`).
 
@@ -135,6 +135,30 @@ Chaque dépôt documente la route dans son README (Verger Drama §3 ter, Short S
 
 Aucune modification du Dashboard lui-même n'a été nécessaire : il affiche déjà WORKING, WAITING, la progression et la file dès que la route répond (`detail_disponible` passe à `true`).
 
+### 1.5 Journaux au format commun (2026-10-04)
+
+Demande de l'utilisateur :
+- même format de journal partout, choisi par lui : « heure + niveau + message » ;
+- plus de lignes GET/POST, ni dans les apps ni dans le dashboard ;
+- plus de QR code dans Verger Drama, ni d'adresse IP des apps (on passe par le dashboard).
+
+L'idée de rendre les apps inaccessibles par leur port a été **abandonnée par l'utilisateur** (« oublie ça »).
+
+Format : `14:02:11 INFO    message` (`%(asctime)s %(levelname)-7s %(message)s`, `datefmt="%H:%M:%S"`).
+
+| Dépôt | Branche | Changements |
+|---|---|---|
+| Dashboard | `claude/fervent-cray-gczk5v` | `backend/journalisation.json` (config `dictConfig` passée à uvicorn par `--log-config`, avec `--no-access-log` ; `uvicorn`, `httpx` et `httpcore` en WARNING, `uvicorn.access` coupé). `main.py` : fonction `journal()` pour les messages de démarrage. `etat.py` : logger `dashboard` (allumage, repris au démarrage, arrêt demandé, éteint, arrêt inattendu en WARNING). `processus.py` : la ligne « Détachement refusé » est au format commun. Test `tests/test_journalisation.py` |
+| Verger Drama | `claude/journal-commun` | `common/logging_utils.py` : `FormatCommun` (retire les balises rich) et `journal_simple()`, appelée par `web/server.py:lancer()` (le mode CLI garde l'affichage rich dans le terminal). Plus de QR code, d'adresse ni de conseil pare-feu dans le journal ; `qrcode` retiré de `requirements.txt` ; `uvicorn.run(..., log_config=None, access_log=False)`. README §3 bis. Test `tests/test_journal_commun.py` |
+| Short Studio | `claude/journal-commun` | `yt2short/cli.py` : format sans `%(name)s`. `serve()` : plus d'adresse ni d'avertissement « pas de mot de passe », une ligne « Interface web démarrée (port …) » ; `log_config=None, access_log=False`. `main.py` : la ligne « config.yaml créé » au format commun. Test `test_serve_journal_commun_sans_adresse` |
+| Montage IA | `claude/journal-commun` | `backend/journalisation.json` (copie de celle du dashboard) passée à uvicorn par `main.py` avec `--no-access-log`. `main.py` : `journal()`, plus d'adresses (`adresse_locale` supprimée). `montage/app.py` : `basicConfig` au format commun (pour un lancement direct). README « Lancer » |
+
+Vérifié :
+- tests : Dashboard 25 passed, Verger Drama 122 passed, Short Studio 28 passed (`test_clipper` exclu, CUDA), Montage IA 58 passed ; ruff OK ;
+- **test d'ensemble avant les PR** : vrai `python main.py` du dashboard (code par `DASHBOARD_ACCESS_CODE`), 3 vraies apps allumées par lui, une quinzaine de requêtes GET/POST et un import dans Montage IA, puis tout éteint. Les 3 `journaux/<id>.log` et la console du dashboard ne contiennent que des lignes au format commun, **aucune ligne de requête, aucune adresse d'app**. Le dashboard garde sa propre adresse dans sa console (nécessaire pour l'ouvrir).
+
+Ce n'est pas un bug : Montage IA n'écrit rien dans son journal pendant un import, car ses tâches journalisent dans l'interface (`Contexte.log`), pas sur la sortie standard.
+
 ---
 
 ## 2. Décisions de conception (et pourquoi)
@@ -215,5 +239,6 @@ Aucune modification du Dashboard lui-même n'a été nécessaire : il affiche d�
 - **Dans Playwright, ne pas attendre un état avec `text=ON`** : c'est une recherche insensible à la casse, et « M**on**tage » la satisfait. Utiliser `text="ON"` (entre guillemets).
 - Ne pas modifier les 3 apps depuis ce dépôt : chaque changement passe par une PR dans le dépôt de l'app.
 - **Ne pas ouvrir de PR dans une app avant le test d'ensemble avec le Dashboard** (§1.4) : tests unitaires de l'app, puis Dashboard + vraie app lancée par `modules.toml`, avec au moins une vraie tâche observée. Pour lancer Montage IA sans réinstaller : lien `backend/.venv` vers un venv déjà prêt + `touch <venv>/.installe`, à retirer ensuite.
+- **Ne pas réintroduire de journal différent** : tout passe au format commun `%(asctime)s %(levelname)-7s %(message)s` / `%H:%M:%S`, sans journal d'accès uvicorn (`--no-access-log` ou `access_log=False`). Garder `httpx` en WARNING dans `backend/journalisation.json` : le superviseur interroge les modules toutes les 2 s et chaque requête ferait une ligne INFO.
 - **Ne pas changer le contrat de `/api/dashboard/etat`** (spec §6.2) d'un seul côté : les 3 apps et `backend/dashboard/etat.py` (`_taches_valides`, `etat_selon_taches`) doivent rester d'accord.
 - Dans un clone superficiel d'une app (`git clone --depth 1`), `git push --force-with-lease` sur une branche est refusé (« stale info ») car seul `main` est suivi : passer le SHA attendu, `--force-with-lease=<branche>:<sha>`.

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import contextlib
+import logging
 import subprocess
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -16,6 +17,7 @@ from . import journal, processus
 from .config import Config, Module
 
 ROUTE_ETAT = "/api/dashboard/etat"
+log = logging.getLogger("dashboard")
 
 
 class Etat(StrEnum):
@@ -102,6 +104,8 @@ class Superviseur:
                 suivi.passer(Etat.ERROR, suivi.module.erreur)
             else:
                 suivi.proc = await asyncio.to_thread(processus.adopter, self.config, suivi.module)
+                if suivi.proc is not None:
+                    log.info("%s : déjà allumé, repris par le dashboard.", suivi.module.nom)
         await self.rafraichir_tout()
         self._boucle = asyncio.create_task(self._tourner())
 
@@ -184,6 +188,7 @@ class Superviseur:
         suivi.proc, suivi.popen, suivi.taches, suivi.a_repondu = None, None, [], False
         processus.oublier(self.config, suivi.module)
         texte = "Le module s'est arrêté de façon inattendue" + (f" (code {code})." if code is not None else ".")
+        log.warning("%s : %s", suivi.module.nom, texte[0].lower() + texte[1:])
         suivi.passer(Etat.ERROR, "\n".join([texte, *fin]) if fin else texte)
 
     # ------------------------------------------------------------------ actions
@@ -207,6 +212,7 @@ class Superviseur:
             suivi.popen, suivi.proc = popen, psutil.Process(popen.pid)
             suivi.code_sortie, suivi.a_repondu, suivi.taches = None, False, []
             suivi.passer(Etat.STARTING)
+            log.info("%s : allumage (port %s).", module.nom, module.port)
 
     async def eteindre(self, suivi: Suivi, force: bool) -> None:
         module = suivi.module
@@ -221,6 +227,8 @@ class Superviseur:
             if suivi.etat in OCCUPES and not force:
                 raise Refus(f"{module.nom} a une tâche en cours.", suivi.taches)
             suivi.passer(Etat.STOPPING)
+            interrompue = " (tâche en cours interrompue)" if force and suivi.taches else ""
+            log.info("%s : arrêt demandé%s.", module.nom, interrompue)
 
         tache = asyncio.create_task(self._eteindre(suivi))
         self._arrets.add(tache)
@@ -236,3 +244,4 @@ class Superviseur:
                 suivi.proc, suivi.popen, suivi.taches, suivi.a_repondu = None, None, [], False
                 suivi.detail_disponible = False
                 suivi.passer(Etat.OFF)
+                log.info("%s : éteint.", suivi.module.nom)
