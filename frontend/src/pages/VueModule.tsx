@@ -121,7 +121,7 @@ export function VueModule() {
           <div className="absolute inset-0 z-10 grid animate-apparition place-items-center bg-fond/85 px-4 backdrop-blur-md">
             <div className="flex max-w-sm flex-col items-center text-center" role="status" aria-live="polite">
               <span className="grid size-16 place-items-center rounded-2xl bg-surface-2 ring-1 ring-bord">
-                <PowerOff className="size-7 text-rose" />
+                <PowerOff className="size-7 text-violet" />
               </span>
               <h2 className="mt-4 text-xl font-bold">{texteVoile(m)}</h2>
               {m.etat === "ERROR" && m.message && (

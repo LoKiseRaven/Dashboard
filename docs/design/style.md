@@ -4,6 +4,21 @@ Ce document décrit précisément le style visuel de l'interface web de **Verger
 
 ---
 
+## 0. Variante du Dashboard (2026-10-08)
+
+Le Dashboard garde tout ce guide, **sauf les deux accents**, choisis par l'utilisateur :
+
+| Jeton | Guide d'origine | Dashboard |
+|---|---|---|
+| Accent principal (boutons principaux, ⏻ allumé, début du dégradé, focus des champs) | `--color-rose: #fe2c55` | `--color-violet: #a121f6` |
+| Survol de l'accent principal | `--color-rose-fonce: #e0193f` | `--color-violet-fonce: #8a12dd` |
+| Accent froid (info, focus clavier, WORKING, fin du dégradé) | `--color-cyan: #25f4ee` | `--color-cyan: #56d8fc` |
+| Halos | `rgba(254,44,85,…)` / `rgba(37,244,238,…)` | `rgba(161,33,246,…)` / `rgba(86,216,252,…)` |
+
+- Partout où ce guide écrit `*-rose` (`bg-rose`, `shadow-rose/25`, `hover:bg-rose-fonce`…), le Dashboard utilise `*-violet`.
+- **Les couleurs d'état ne changent pas** : rouge `ko` (bouton `danger`, ERROR), vert `ok`, orange `attente`.
+- Contrastes vérifiés : texte blanc sur `#a121f6` 5,2:1 (AA) ; cyan sur la surface 11:1. Le violet en texte sur fond sombre (3,6:1) est réservé aux icônes, jamais au texte courant.
+
 ## 1. L'esprit en une phrase
 
 Un **studio de création sombre et nerveux**, dans l'esprit des applis vidéo verticales (TikTok) :

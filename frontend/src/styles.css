@@ -7,9 +7,9 @@
   --color-bord: #2a2a33;        /* toutes les bordures fines */
   --color-texte: #f4f4f5;       /* texte principal */
   --color-doux: #a1a1aa;        /* texte secondaire, libellés */
-  --color-rose: #fe2c55;        /* action principale, accent chaud */
-  --color-rose-fonce: #e0193f;  /* survol de l'action principale */
-  --color-cyan: #25f4ee;        /* accent froid : liens, info, focus, progression */
+  --color-violet: #a121f6;      /* action principale, accent principal */
+  --color-violet-fonce: #8a12dd; /* survol de l'action principale */
+  --color-cyan: #56d8fc;        /* accent froid : liens, info, focus, progression */
   --color-ok: #22c55e;
   --color-attente: #f59e0b;
   --color-ko: #ef4444;
@@ -48,20 +48,20 @@
   }
   h1, h2, h3 { font-family: var(--font-titre); letter-spacing: -0.02em; }
   :focus-visible { outline: 2px solid var(--color-cyan); outline-offset: 2px; }
-  ::selection { background: color-mix(in srgb, var(--color-rose) 45%, transparent); }
+  ::selection { background: color-mix(in srgb, var(--color-violet) 45%, transparent); }
 }
 
-/* Texte en dégradé rose → cyan (un mot du logo, jamais un paragraphe) */
+/* Texte en dégradé violet → cyan (un mot du logo, jamais un paragraphe) */
 @utility texte-degrade {
-  background: linear-gradient(90deg, var(--color-rose), var(--color-cyan));
+  background: linear-gradient(90deg, var(--color-violet), var(--color-cyan));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
 }
 
-/* Fond en dégradé rose → cyan (barres de progression, pastilles « vedette ») */
+/* Fond en dégradé violet → cyan (barres de progression, pastilles « vedette ») */
 @utility fond-degrade {
-  background: linear-gradient(90deg, var(--color-rose), var(--color-cyan));
+  background: linear-gradient(90deg, var(--color-violet), var(--color-cyan));
 }
 
 /* Squelette de chargement scintillant */
