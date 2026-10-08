@@ -1,6 +1,6 @@
 # HANDOVER — Dashboard
 
-Passation de la session du 2026-09-29. Branche : `claude/fervent-cray-gczk5v`. [LoKiseRaven/Dashboard#1](https://github.com/LoKiseRaven/Dashboard/pull/1) (étapes 1 à 4) est **fusionnée** ; la branche est repartie de `main` le 2026-10-04 pour le journal commun (§1.5), qui fait l'objet d'une nouvelle PR.
+Passation de la session du 2026-09-29. Branche : `claude/fervent-cray-gczk5v`, repartie de `main` à chaque nouveau chantier. Fusionnées : [LoKiseRaven/Dashboard#1](https://github.com/LoKiseRaven/Dashboard/pull/1) (étapes 1 à 4) et [LoKiseRaven/Dashboard#2](https://github.com/LoKiseRaven/Dashboard/pull/2) (journal commun, §1.5). En cours : couleurs violet et cyan (§1.6).
 
 > **Règle** : ce fichier est mis à jour **avant chaque commit** (voir `CLAUDE.md`).
 
@@ -73,7 +73,7 @@ cd backend
 | `hooks/sondage.ts` | `useSondage(charger, intervalle, actif)` : appel immédiat puis périodique, **en pause quand l'onglet est caché**, jamais deux requêtes en parallèle, `recharger()` pour forcer |
 | `composants/ui.tsx` | `Bouton`/`classesBouton` (guide §5.1, accepte `ref`), `BadgeEtat` (libellés et couleurs de la spec §7.2), `NomDegrade`, `Progression` (`pct` null → barre pleine qui pulse), `Encart`, `Halo` |
 | `composants/cadre.tsx` | `EnTete` (🤓 « Dash**board** », bouton `LogOut` masqué si `session.local`), `Toasts` |
-| `composants/Alimentation.tsx` | `BoutonAlimentation` (bouton rond `size-11`, ou `size-10` en `petit` ; icône `Power`, rose si allumé) : `demarrer` ou `arreter` ; sur un 409 avec `taches`, ouvre `PopupArret` (**portail** vers `document.body`, `role="alertdialog"`, focus initial sur « Annuler », Échap et clic sur le voile ferment, Tab piégé) qui renvoie `arreter(id, true)`. Réutilisé en `petit` dans la barre de la vue module |
+| `composants/Alimentation.tsx` | `BoutonAlimentation` (bouton rond `size-11`, ou `size-10` en `petit` ; icône `Power`, violet si allumé) : `demarrer` ou `arreter` ; sur un 409 avec `taches`, ouvre `PopupArret` (**portail** vers `document.body`, `role="alertdialog"`, focus initial sur « Annuler », Échap et clic sur le voile ferment, Tab piégé) qui renvoie `arreter(id, true)`. Réutilisé en `petit` dans la barre de la vue module |
 | `composants/CarteModule.tsx` | Carte (spec §7.2). Si allumée : un `<Link>` étiré (`absolute inset-0 z-0`) ; le bouton et le journal sont en `relative z-10` |
 | `composants/Journal.tsx` | Journal dépliable, 200 lignes, sondage de 2 s seulement s'il est déplié ; le choix est retenu dans `localStorage` (`journal-ouvert:<id>`), sinon il est déplié par défaut en STARTING et ERROR ; défilement automatique sauf si l'on est remonté. Masqué quand le module est OFF |
 | `composants/taches.tsx` | `LigneTache`, `resumeTache`, `texteFile` (« En attente du GPU · 2e dans la file ») |
@@ -159,6 +159,19 @@ Vérifié :
 
 Ce n'est pas un bug : Montage IA n'écrit rien dans son journal pendant un import, car ses tâches journalisent dans l'interface (`Contexte.log`), pas sur la sortie standard.
 
+### 1.6 Couleurs violet et cyan (2026-10-08)
+
+Demande de l'utilisateur : garder le style, mais avec comme couleurs principales violet `#A121F6` et cyan `#56D8FC` ; un bouton rouge reste rouge.
+
+- `frontend/src/styles.css` : `--color-rose` → `--color-violet: #a121f6`, `--color-rose-fonce` → `--color-violet-fonce: #8a12dd` (survol), `--color-cyan: #56d8fc`.
+- Toutes les classes `*-rose` sont renommées en `*-violet`, et les `rgba` des halos sont adaptés : `ui.tsx`, `cadre.tsx`, `Alimentation.tsx`, `CarteModule.tsx`, `Connexion.tsx`, `VueModule.tsx`.
+- Inchangés : rouge `ko` (bouton « Arrêter quand même », ERROR), vert, orange, gris.
+- `docs/design/style.md` §0 « Variante du Dashboard », spec v1.4 (§7.2 et §7.3).
+- Vérifié :
+  - contrastes : blanc sur violet 5,2:1, cyan 11:1 ;
+  - `tsc` et build OK ;
+  - captures Playwright (connexion, accueil avec WORKING, STARTING, OFF au survol et ERROR, pop-up d'arrêt, vue module) avec le serveur de démo.
+
 ---
 
 ## 2. Décisions de conception (et pourquoi)
@@ -229,6 +242,7 @@ Ce n'est pas un bug : Montage IA n'écrit rien dans son journal pendant un impor
 - **Ne pas faire allumer un module par le dashboard au démarrage** : ils sont OFF par défaut (demande explicite).
 - **Ne pas utiliser `pkill -f "…dashboard.app…"` dans un shell d'outil** : le motif correspond à la ligne de commande du shell lui-même, qui se tue (exit 144). Pour arrêter un serveur de test, chercher son PID par le port avec psutil.
 - **Ne pas ajouter de thème clair** (style.md §3).
+- **Ne pas réintroduire de rose** (`*-rose`, `#fe2c55`) : l'accent du Dashboard est le violet (style.md §0). Ne pas teinter en violet ce qui est rouge (`danger`, ERROR).
 - **Ne pas remettre `aria-disabled` sur `<article>`** dans `CarteModule.tsx` : il désactive aussi, pour l'accessibilité, le bouton ⏻ qu'il contient.
 - **Ne pas enlever `min-w-0`** de l'`<article>` : sans lui, un long message dans une carte fait déborder la page sur téléphone.
 - **Ne pas sortir `PopupArret` du portail** (`createPortal(…, document.body)`).

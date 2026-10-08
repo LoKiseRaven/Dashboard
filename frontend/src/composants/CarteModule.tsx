@@ -27,7 +27,7 @@ export function CarteModule({ module: m, index, surChangement }: { module: Modul
       style={{ animationDelay: `${Math.min(index, 8) * 60}ms` }}
       className={`relative min-w-0 animate-apparition rounded-3xl border bg-surface p-5 sm:p-6 ${BORDURES[m.etat] ?? "border-bord"} ${
         cliquable
-          ? "transition duration-300 hover:-translate-y-1 hover:border-rose/40 hover:shadow-2xl hover:shadow-rose/10"
+          ? "transition duration-300 hover:-translate-y-1 hover:border-violet/40 hover:shadow-2xl hover:shadow-violet/10"
           : ""
       }`}
     >

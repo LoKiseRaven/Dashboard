@@ -1,9 +1,10 @@
 # Dashboard — spécification
 
-Version 1.3, du 2026-09-29. Statut : **validée**.
+Version 1.4, du 2026-10-08. Statut : **validée**.
 - v1.1 : le code d'accès passe du Generator au dashboard.
 - v1.2 : le dashboard s'appelle « Dashboard » 🤓 ; les cartes reprennent le nom et l'emoji de chaque app, sans description.
 - v1.3 : ports 8080 (dashboard) et 8081 à 8083 (modules).
+- v1.4 : accents du dashboard violet `#a121f6` et cyan `#56d8fc` au lieu de rose et cyan (voir `docs/design/style.md`, « Variante du Dashboard ») ; classes `*-violet` au lieu de `*-rose`.
 
 Guide de style : `docs/design/style.md`, copie conforme de celui d'AI-Video-Editor. L'interface doit le respecter à la lettre.
 
@@ -286,7 +287,7 @@ Toute réponse 401 de l'API renvoie vers `/connexion`, puis vers la page demand�
 ```
 
 - Conteneur : `rounded-3xl border border-bord bg-surface p-5 sm:p-6`.
-- **Cliquable** (ON / WORKING / WAITING) : un lien étiré sur toute la carte (`absolute inset-0`) mène à `/module/<id>` ; le bouton d'alimentation et le journal passent au-dessus (`z-10`), car un bouton ne peut pas être placé dans un lien. Classes de survol : avec `transition duration-300 hover:-translate-y-1 hover:border-rose/40 hover:shadow-2xl hover:shadow-rose/10`.
+- **Cliquable** (ON / WORKING / WAITING) : un lien étiré sur toute la carte (`absolute inset-0`) mène à `/module/<id>` ; le bouton d'alimentation et le journal passent au-dessus (`z-10`), car un bouton ne peut pas être placé dans un lien. Classes de survol : avec `transition duration-300 hover:-translate-y-1 hover:border-violet/40 hover:shadow-2xl hover:shadow-violet/10`.
 - **Non cliquable** (OFF / STARTING / STOPPING / ERROR) : pas de lien, pas d'effet au survol, curseur par défaut. Un clic ne fait **rien**. Pas d'`aria-disabled` sur la carte : il s'étendrait à son contenu et le bouton d'alimentation serait annoncé comme désactivé.
 - Bordure selon l'état : `border-ok/25` si ON, `border-cyan/30` si WORKING, `border-attente/30` si WAITING, `border-ko/30` si ERROR, sinon `border-bord`. Une carte OFF est légèrement éteinte (médaillon et titre en `opacity-60`).
 - Badge d'état (§5.7) :
@@ -311,8 +312,8 @@ Toute réponse 401 de l'API renvoie vers `/connexion`, puis vers la page demand�
 - Icône lucide **`Power`** (le symbole ⏻ : cercle ouvert traversé d'un trait), `size-5`.
 - Forme : `grid size-11 shrink-0 place-items-center rounded-full transition-all duration-150 active:scale-95`.
 - Selon l'état :
-  - **OFF / ERROR** : `border border-bord bg-surface-2 text-doux hover:border-rose/50 hover:text-rose`, `aria-label="Allumer <nom>"` ;
-  - **ON / WORKING / WAITING** : `bg-rose text-white shadow-lg shadow-rose/30 hover:bg-rose-fonce`, `aria-label="Éteindre <nom>"`. C'est le seul aplat rose de la carte, ce qui respecte la règle « un seul principal par zone » ;
+  - **OFF / ERROR** : `border border-bord bg-surface-2 text-doux hover:border-violet/50 hover:text-violet`, `aria-label="Allumer <nom>"` ;
+  - **ON / WORKING / WAITING** : `bg-violet text-white shadow-lg shadow-violet/30 hover:bg-violet-fonce`, `aria-label="Éteindre <nom>"`. C'est le seul aplat violet de la carte, ce qui respecte la règle « un seul principal par zone » ;
   - **STARTING / STOPPING** : désactivé, icône remplacée par `Loader2 animate-spin`.
 - `aria-pressed` vaut `true` quand le module est allumé.
 - En cas d'échec de la requête : notification d'erreur (§5.18), ex. « Impossible d'allumer Verger Drama : le port 8081 est déjà utilisé. »

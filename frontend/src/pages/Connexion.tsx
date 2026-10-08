@@ -42,7 +42,7 @@ export function Connexion() {
     <main className="relative grid min-h-dvh place-items-center overflow-hidden px-4">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(40%_35%_at_30%_30%,rgba(254,44,85,0.22),transparent),radial-gradient(35%_35%_at_70%_70%,rgba(37,244,238,0.16),transparent)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(40%_35%_at_30%_30%,rgba(161,33,246,0.22),transparent),radial-gradient(35%_35%_at_70%_70%,rgba(86,216,252,0.16),transparent)]"
       />
       <form
         onSubmit={(e) => void envoyer(e)}
@@ -70,7 +70,7 @@ export function Connexion() {
             onChange={(e) => setCode(e.target.value)}
             aria-invalid={erreur ? true : undefined}
             aria-describedby={erreur ? "erreur-code" : undefined}
-            className="h-12 w-full rounded-xl border border-bord bg-surface-2 pr-4 pl-10 text-base outline-none transition focus:border-rose/70 focus:ring-4 focus:ring-rose/15"
+            className="h-12 w-full rounded-xl border border-bord bg-surface-2 pr-4 pl-10 text-base outline-none transition focus:border-violet/70 focus:ring-4 focus:ring-violet/15"
           />
         </div>
         {erreur && (

@@ -65,8 +65,8 @@ export function BoutonAlimentation({
 
   const taille = petit ? "size-10" : "size-11";
   const aspect = allume
-    ? "bg-rose text-white shadow-lg shadow-rose/30 hover:bg-rose-fonce"
-    : "border border-bord bg-surface-2 text-doux hover:border-rose/50 hover:text-rose";
+    ? "bg-violet text-white shadow-lg shadow-violet/30 hover:bg-violet-fonce"
+    : "border border-bord bg-surface-2 text-doux hover:border-violet/50 hover:text-violet";
 
   return (
     <>

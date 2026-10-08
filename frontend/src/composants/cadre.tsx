@@ -24,7 +24,7 @@ export function EnTete() {
     <header className="sticky top-0 z-30 border-b border-bord/70 bg-fond/75 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4">
         <Link to="/" className="group flex items-center gap-2.5">
-          <span className="grid size-9 place-items-center rounded-xl bg-surface-2 text-xl ring-1 ring-bord transition group-hover:ring-rose/50">
+          <span className="grid size-9 place-items-center rounded-xl bg-surface-2 text-xl ring-1 ring-bord transition group-hover:ring-violet/50">
             🤓
           </span>
           <span className="font-titre text-lg font-bold tracking-tight">

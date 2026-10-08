@@ -9,7 +9,7 @@ export type Variante = "principal" | "secondaire" | "fantome" | "danger";
 
 const STYLES: Record<Variante, string> = {
   principal:
-    "bg-rose text-white shadow-lg shadow-rose/25 hover:bg-rose-fonce hover:shadow-rose/40 disabled:shadow-none",
+    "bg-violet text-white shadow-lg shadow-violet/25 hover:bg-violet-fonce hover:shadow-violet/40 disabled:shadow-none",
   secondaire: "border border-bord bg-surface-2 text-texte hover:border-doux/50 hover:bg-bord/60",
   fantome: "text-doux hover:bg-surface-2 hover:text-texte",
   danger: "border border-ko/40 bg-ko/10 text-red-200 hover:bg-ko/20",
@@ -141,7 +141,7 @@ export function Halo() {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(50%_60%_at_20%_0%,rgba(254,44,85,0.14),transparent),radial-gradient(40%_50%_at_85%_0%,rgba(37,244,238,0.10),transparent)]"
+      className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-80 bg-[radial-gradient(50%_60%_at_20%_0%,rgba(161,33,246,0.14),transparent),radial-gradient(40%_50%_at_85%_0%,rgba(86,216,252,0.10),transparent)]"
     />
   );
 }
